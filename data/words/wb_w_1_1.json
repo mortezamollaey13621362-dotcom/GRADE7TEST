@@ -1,0 +1,31 @@
+{
+  "id": "wb_w_1_1",
+  "word": "workbook",
+  "phonetic": {
+    "ipa": {
+      "american": "/ˈwɝːk.bʊk/",
+      "british": "/ˈwɜːk.bʊk/"
+    }
+  },
+  "level": "A2",
+  "partOfSpeech": ["noun"],
+  "persian": {
+    "main": "کتاب کار",
+    "short": "کتاب تمرین"
+  },
+  "topics": ["education", "school"],
+  "meanings": [
+    {
+      "definition": "a book with exercises for students to practice lessons",
+      "persianDefinition": "کتابی شامل تمرین‌ها برای تمرین درس‌ها",
+      "example": {
+        "sentence": "Students use a workbook to practice English grammar.",
+        "translation": "دانش‌آموزان از کتاب کار برای تمرین گرامر انگلیسی استفاده می‌کنند."
+      }
+    }
+  ],
+  "synonyms": ["exercise book", "practice book"],
+  "antonyms": ["textbook"],
+  "usage": "A workbook is usually used together with a textbook.",
+  "commonMistakes": ["Confusing workbook with textbook"]
+}

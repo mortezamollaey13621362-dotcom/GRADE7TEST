@@ -1,0 +1,500 @@
+/* css/games.css */
+
+/* --- Variables --- */
+:root {
+    --game-primary: #6c5ce7;
+    --game-primary-dark: #5649c0;
+    --game-accent: #00b894;
+    --game-accent-dark: #00a187;
+    --game-bg: #f8f9fe;
+    --card-shadow: 0 10px 20px rgba(108, 92, 231, 0.15);
+}
+
+/* --- Menu Container --- */
+.games-menu {
+    padding: 25px;
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.game-intro h3 {
+    color: var(--game-primary);
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.game-intro p {
+    color: #636e72;
+    font-size: 1rem;
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+/* --- Game Selection Cards (Menu Buttons) --- */
+.games-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.game-select-card {
+    background: white;
+    border-radius: 18px;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    /* 3D Button Look */
+    box-shadow: 0 6px 0 #dfe6e9, 0 10px 10px rgba(0,0,0,0.1); 
+    border: 1px solid #dfe6e9;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    top: 0;
+}
+
+.game-select-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 0 #dfe6e9, 0 15px 20px rgba(0,0,0,0.15);
+}
+
+.game-select-card:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #dfe6e9, 0 4px 4px rgba(0,0,0,0.1);
+}
+
+.card-icon {
+    width: 55px;
+    height: 55px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+    margin-left: 15px; /* RTL fix if needed, assuming LTR layout based on prev code */
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,0.2);
+}
+
+.memory-icon { background: linear-gradient(135deg, #ff9ff3, #f368e0); }
+.word-icon { background: linear-gradient(135deg, #54a0ff, #2e86de); }
+
+.card-info { 
+    flex: 1; 
+    text-align: right; /* Assuming Persian text */
+}
+
+.card-info h4 { 
+    margin: 0 0 5px 0; 
+    color: #2d3436; 
+    font-size: 1.15rem; 
+    font-weight: 700;
+}
+
+.card-info span { 
+    font-size: 0.85rem; 
+    color: #b2bec3; 
+    font-weight: 500;
+}
+
+.arrow { 
+    color: #dfe6e9; 
+    font-size: 1.2rem;
+    margin-right: 10px;
+}
+
+/* --- Game Board Header --- */
+.game-header {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.game-stats {
+    background: #f1f2f6;
+    padding: 8px 15px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    color: #2d3436;
+    font-weight: bold;
+    border: 2px solid white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* --- Memory Game Styles --- */
+.memory-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    padding: 15px;
+    perspective: 1000px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* برای موبایل */
+@media (max-width: 768px) {
+    .memory-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .memory-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+}
+
+.memory-card {
+    aspect-ratio: 3/4;
+    position: relative;
+    cursor: pointer;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+    border-radius: 12px;
+}
+
+.memory-card.flip {
+    transform: rotateY(180deg);
+}
+
+.memory-card .front-face,
+.memory-card .back-face {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    border-radius: 12px;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border: 3px solid white; /* White border for sticker look */
+}
+
+/* Back of card (Question Mark - Initial State) */
+.memory-card .front-face {
+    background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+    transform: rotateY(0deg);
+}
+.memory-card .front-face::after {
+    content: "?";
+    font-size: 2.5rem;
+    color: rgba(255,255,255,0.8);
+    font-weight: 900;
+}
+
+/* Front of card (Content - Revealed State) */
+.memory-card .back-face {
+    background: white;
+    transform: rotateY(180deg);
+    padding: 8px;
+    text-align: center;
+    font-weight: bold;
+    color: #2d3436;
+    font-size: 0.9rem;
+    line-height: 1.3;
+    word-break: break-word;
+    overflow: hidden;
+}
+
+/* برای کلمات انگلیسی */
+.memory-card .back-face.en-text {
+    font-size: 1rem;
+    font-family: 'Arial', 'Segoe UI', sans-serif;
+    direction: ltr;
+}
+
+.memory-card.matched .back-face {
+    background: #00b894; /* Success Green */
+    color: white;
+    animation: pulseMatch 0.5s ease-in-out;
+    box-shadow: 0 0 15px #55efc4;
+}
+
+/* --- Word Scramble Styles --- */
+.scramble-ui {
+    padding: 10px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.hint-box {
+    background: white;
+    padding: 15px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    text-align: center;
+}
+
+.hint-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #b2bec3;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+
+.hint-text {
+    font-size: 1.2rem;
+    color: #2d3436;
+    margin: 0;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Answer Slots (The boxes where letters go) */
+.answer-slots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 40px;
+    min-height: 60px;
+    direction: ltr; /* چپ به راست */
+    flex-wrap: wrap;
+}
+
+.slot {
+    width: 50px;
+    height: 60px;
+    background: #dfe6e9;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: var(--game-primary);
+    border-bottom: 4px solid #b2bec3; /* Empty slot depth */
+    transition: all 0.2s;
+    direction: ltr; /* چپ به راست */
+    font-family: 'Arial', 'Segoe UI', sans-serif; /* فونت انگلیسی */
+}
+
+.slot.filled {
+    background: white;
+    border-color: var(--game-primary);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(108, 92, 231, 0.2);
+}
+
+.slot.correct-anim {
+    background: #00b894;
+    color: white;
+    border-color: #00a187;
+    animation: bounce 0.5s;
+}
+
+.answer-slots.shake-anim {
+    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+/* Letter Buttons (Keyboard/Pool) */
+.letters-pool {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    direction: ltr; /* چپ به راست */
+    text-align: center;
+}
+
+.letter-btn {
+    width: 50px;
+    height: 50px;
+    border: none;
+    background: white;
+    color: var(--game-primary);
+    font-size: 1.3rem;
+    font-weight: bold;
+    border-radius: 12px;
+    cursor: pointer;
+    /* 3D Tile Effect */
+    box-shadow: 0 4px 0 #a29bfe, 0 5px 10px rgba(0,0,0,0.1);
+    transition: all 0.1s;
+    font-family: 'Arial', 'Segoe UI', sans-serif; /* فونت انگلیسی */
+    direction: ltr; /* چپ به راست */
+}
+
+.letter-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #a29bfe, inset 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.letter-btn.used {
+    background: #f1f2f6;
+    color: #dfe6e9;
+    box-shadow: none;
+    transform: scale(0.95);
+    pointer-events: none;
+}
+
+.btn-small-round {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: none;
+    background: #ff7675;
+    color: white;
+    font-size: 1.2rem;
+    margin-top: 25px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #d63031;
+    transition: all 0.1s;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.btn-small-round:active {
+    transform: translateY(4px);
+    box-shadow: none;
+}
+
+/* --- Win Screen --- */
+.game-win-screen {
+    text-align: center;
+    padding: 30px 20px;
+    animation: slideUp 0.4s ease-out;
+}
+
+.trophy-icon {
+    font-size: 5rem;
+    margin-bottom: 20px;
+    display: block;
+    animation: float 2s infinite ease-in-out;
+    filter: drop-shadow(0 10px 0 rgba(0,0,0,0.1));
+}
+
+.game-win-screen h2 {
+    color: var(--game-primary);
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.game-win-screen p {
+    color: #636e72;
+    margin-bottom: 30px;
+}
+
+.game-win-screen button {
+    background: var(--game-accent);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 5px 0 var(--game-accent-dark);
+    transition: transform 0.1s;
+}
+
+.game-win-screen button:active {
+    transform: translateY(5px);
+    box-shadow: none;
+}
+
+/* --- Animations --- */
+@keyframes pulseMatch {
+    0% { transform: rotateY(180deg) scale(1); }
+    50% { transform: rotateY(180deg) scale(1.1); }
+    100% { transform: rotateY(180deg) scale(1); }
+}
+
+@keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+    40% {transform: translateY(-10px);}
+    60% {transform: translateY(-5px);}
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+    0% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(5deg); }
+    100% { transform: translateY(0px) rotate(0deg); }
+}
+/* به games.css اضافه کن */
+
+/* دسته‌بندی‌ها */
+.game-categories {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #dfe6e9;
+}
+
+.game-categories h4 {
+    color: var(--game-primary);
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.categories-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.category-tag {
+    background: #f1f2f6;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+}
+
+.category-tag:hover {
+    background: var(--game-primary);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* سطح سختی */
+.game-difficulty {
+    display: inline-block;
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 10px;
+    margin-top: 5px;
+}
+
+.difficulty-آسان {
+    background: #4CAF50;
+    color: white;
+}
+
+.difficulty-متوسط {
+    background: #2196F3;
+    color: white;
+}
+
+.difficulty-پیشرفته {
+    background: #FF9800;
+    color: white;
+}

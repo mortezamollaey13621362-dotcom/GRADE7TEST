@@ -1,0 +1,512 @@
+/* css/quiz.css */
+
+/* =========================================
+   1. تنظیمات پایه و کانتینر
+   ========================================= */
+.quiz-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Vazir', 'Tahoma', sans-serif;
+    position: relative;
+}
+
+.hidden { display: none !important; }
+
+/* انیمیشن‌ها */
+.animate-fade-in { animation: fadeIn 0.5s ease-out; }
+.animate-slide-up { animation: slideUp 0.5s ease-out; }
+.animate-pop-in { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+
+/* المان‌های کمکی متن */
+.ltr-content { direction: ltr; text-align: left; font-family: 'Segoe UI', Tahoma, sans-serif; }
+.en-num { font-family: 'Segoe UI', sans-serif; font-weight: bold; }
+.text-left { text-align: left; }
+
+/* =========================================
+   2. صفحه فرود (Landing Page)
+   ========================================= */
+.quiz-landing {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    align-items: stretch;
+    margin-top: 40px;
+    flex-wrap: wrap;
+}
+
+.quiz-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    width: 45%;
+    min-width: 300px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.quiz-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+.student-card:hover { border-color: #4facfe; }
+.teacher-card:hover { border-color: #667eea; }
+
+.icon-wrapper {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    color: #eee;
+    transition: color 0.3s;
+}
+.student-card .icon-wrapper { color: #b3e5fc; }
+.teacher-card .icon-wrapper { color: #d1c4e9; }
+.student-card:hover .icon-wrapper { color: #00f2fe; }
+.teacher-card:hover .icon-wrapper { color: #764ba2; }
+
+.quiz-division-line {
+    width: 2px;
+    background: #eee;
+    display: none; 
+}
+
+/* =========================================
+   3. صفحه انتخاب حالت آزمون (Mode Select)
+   ========================================= */
+.mode-select-container { text-align: center; padding: 20px; }
+.mode-select-container h2 { margin-bottom: 30px; color: #444; }
+
+.mode-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+}
+
+.mode-card {
+    background: white;
+    border: 2px solid #f0f0f0;
+    border-radius: 16px;
+    padding: 25px;
+    width: 200px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.mode-card i { font-size: 2.2rem; color: #ccc; transition: 0.2s; margin-bottom: 5px; }
+.mode-card span { font-weight: bold; font-size: 1.1rem; color: #555; }
+.mode-card small { color: #999; font-size: 0.85rem; }
+
+.mode-card:hover { border-color: #4facfe; background: #fbfdff; transform: translateY(-5px); box-shadow: 0 10px 20px rgba(79, 172, 254, 0.15); }
+.mode-card:hover i { color: #4facfe; }
+
+.mode-card.featured { border-color: #00f2fe; background: #f0fbff; }
+.mode-card.featured i { color: #00c6fb; }
+
+/* =========================================
+   4. رابط کاربری آزمون (Student Quiz UI)
+   ========================================= */
+.student-quiz-ui {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+
+.quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 15px;
+}
+.badge-mode {
+    background: #eef2f7; color: #555; padding: 6px 14px; border-radius: 50px; font-size: 0.85rem; margin-left: 10px;
+}
+.quiz-progress { font-weight: bold; color: #666; font-size: 0.95rem; }
+
+/* استایل دکمه خروج جدید */
+#btn-quiz-exit {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c !important;
+    border: none;
+    padding: 6px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+#btn-quiz-exit:hover {
+    background: #e74c3c;
+    color: white !important;
+}
+
+.q-category {
+    display: inline-block;
+    background: #fff8e1; color: #f39c12;
+    padding: 4px 12px; border-radius: 6px;
+    font-size: 0.8rem; margin-bottom: 15px; font-weight: bold;
+}
+
+.q-text { font-size: 1.5rem; color: #2d3436; margin-bottom: 30px; line-height: 1.6; font-weight: 600; }
+
+/* گزینه‌ها */
+.options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+.btn-option {
+    padding: 18px 20px;
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    color: #444;
+}
+.btn-option:hover:not(:disabled) { background: #e3f2fd; border-color: #2196f3; color: #0d47a1; }
+.btn-option:disabled { cursor: default; opacity: 0.7; }
+
+/* استایل‌های صحیح و غلط */
+.btn-option.opt-correct {
+    background: #d4edda !important; border-color: #28a745 !important; color: #155724 !important;
+}
+.btn-option.opt-wrong {
+    background: #f8d7da !important; border-color: #dc3545 !important; color: #721c24 !important;
+}
+.btn-option.opt-should-be {
+    border: 2px dashed #28a745 !important; background: #f0fff4 !important; position: relative;
+}
+
+/* ورودی متنی */
+.text-answer-wrapper { display: flex; gap: 10px; flex-wrap: wrap; }
+.input-text-answer {
+    flex: 1; min-width: 200px; padding: 14px; border: 2px solid #ddd; border-radius: 10px; font-size: 1.1rem; outline: none; transition: border 0.2s;
+}
+.input-text-answer:focus { border-color: #6c5ce7; }
+.btn-submit-text {
+    padding: 0 30px; background: #6c5ce7; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold;
+}
+
+/* باکس فیدبک */
+.feedback-box { margin-top: 30px; }
+.feedback-content {
+    padding: 20px; border-radius: 12px; border-right: 5px solid;
+    background: #fdfdfd; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+}
+.fb-success { background: #f0fff4; border-color: #2ecc71; }
+.fb-error { background: #fff5f5; border-color: #e74c3c; }
+
+.feedback-content h4 { margin: 0 0 10px 0; font-size: 1.1rem; }
+.en-exp { font-weight: bold; color: #333; margin-bottom: 8px; display: block; }
+.fa-exp, .fa-explanation-box { 
+    color: #666; font-size: 0.95rem; direction: rtl; text-align: right; line-height: 1.6; 
+}
+
+/* دکمه بعدی */
+.quiz-footer { margin-top: 30px; text-align: left; height: 50px; display: flex; align-items: center; justify-content: flex-end; }
+.btn-next {
+    background: #2d3436; color: white; border: none;
+    padding: 12px 35px; border-radius: 8px; font-size: 1rem;
+    cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.btn-next:hover { background: #000; transform: translateY(-2px); }
+
+/* =========================================
+   5. پنل معلم (Teacher Dashboard)
+   ========================================= */
+.teacher-dashboard {
+    background: white; border-radius: 20px; padding: 30px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.05);
+}
+.dashboard-header {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; margin-bottom: 25px;
+}
+.teacher-controls {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;
+}
+.control-group {
+    background: #fcfcfc; padding: 25px; border-radius: 16px; border: 1px solid #eee;
+    transition: 0.2s;
+}
+.control-group:hover { border-color: #ddd; box-shadow: 0 5px 15px rgba(0,0,0,0.03); }
+
+.control-group label {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: bold; margin-bottom: 20px; color: #333; font-size: 1.05rem;
+}
+.control-group label i { color: #6c5ce7; font-size: 1.2rem; }
+
+.btn-row { display: flex; gap: 10px; }
+.btn-gen {
+    flex: 1; padding: 10px; background: #6c5ce7; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: 0.2s;
+}
+.btn-gen.secondary { background: #a29bfe; }
+.btn-gen:hover { opacity: 0.9; transform: translateY(-2px); }
+
+.btn-small {
+    background: #ff7675; color: white; border: none; padding: 5px 15px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+}
+
+/* =========================================
+   6. نتیجه آزمون (Results)
+   ========================================= */
+.quiz-result { text-align: center; background: white; padding: 40px; border-radius: 20px; }
+.result-msg { font-size: 1.5rem; color: #444; margin-bottom: 20px; font-weight: bold; }
+
+.score-circle {
+    width: 160px; height: 160px; border-radius: 50%;
+    background: conic-gradient(#4facfe 0%, #00f2fe 100%);
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    margin: 20px auto 40px auto; color: white;
+    box-shadow: 0 10px 25px rgba(0, 242, 254, 0.3);
+}
+.score-val { font-size: 3.5rem; font-weight: bold; line-height: 1; }
+.score-total { font-size: 1.2rem; opacity: 0.8; }
+
+.result-actions { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+.btn-primary { background: #0984e3; color: white; padding: 12px 30px; border-radius: 10px; border:none; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+.btn-primary:hover { background: #0870c0; transform: translateY(-2px); }
+
+.btn-outline { background: white; border: 2px solid #0984e3; color: #0984e3; padding: 12px 30px; border-radius: 10px; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+.btn-outline:hover { background: #0984e3; color: white; }
+
+.btn-text { background: none; border: none; color: #666; cursor: pointer; text-decoration: none; font-size: 0.95rem; }
+.btn-text:hover { color: #333; text-decoration: underline; }
+
+/* =========================================
+   7. استایل‌های چاپ (Print Layout)
+   ========================================= */
+#print-layer-container {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #525659; /* پس‌زمینه تیره مثل PDF Viewer */
+    z-index: 9999; overflow-y: auto; 
+    padding: 30px 0;
+    display: flex; justify-content: center;
+}
+
+.printable-paper {
+    width: 210mm; 
+    min-height: 297mm;
+    padding: 20mm;
+    margin: 0 auto 50px auto; /* فاصله از پایین برای دکمه‌ها */
+    background: white;
+    color: black;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    box-sizing: border-box;
+    position: relative;
+}
+
+.paper-header {
+    border-bottom: 2px solid #000;
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+.header-right h1 { margin: 0 0 10px 0; font-size: 16pt; }
+.header-right p { margin: 5px 0 0 0; font-size: 11pt; }
+.header-left { text-align: left; font-size: 10pt; line-height: 1.5; }
+.key-badge {
+    display: inline-block; border: 1px solid #000; padding: 2px 8px; border-radius: 4px; font-weight: bold; margin-top: 5px;
+}
+
+.paper-question {
+    margin-bottom: 20px;
+    page-break-inside: avoid;
+    border-bottom: 1px dashed #ddd;
+    padding-bottom: 12px;
+}
+.q-row { display: flex; gap: 8px; }
+.q-num { font-weight: bold; width: 25px; flex-shrink: 0; }
+.q-content { font-size: 11pt; font-weight: 500; width: 100%; line-height: 1.4; }
+
+.paper-options {
+    margin-top: 8px;
+    padding-left: 33px; /* هم‌تراز با متن سوال */
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+.paper-opt-item { font-size: 10.5pt; display: flex; align-items: center; }
+.paper-opt-item .circle {
+    display: inline-block; width: 18px; height: 18px;
+    border: 1px solid #000; border-radius: 50%;
+    text-align: center; line-height: 16px; font-size: 11px; margin-right: 6px;
+    flex-shrink: 0;
+}
+.paper-lines {
+    margin-top: 15px; color: #ccc; font-family: monospace; letter-spacing: 2px;
+}
+
+/* کلید پاسخنامه */
+.highlight-correct { font-weight: bold; }
+.highlight-correct .circle { background: #000; color: #fff; }
+
+.answer-key-box {
+    margin-top: 8px; padding: 8px 12px; background: #f9f9f9; 
+    border-left: 3px solid #666; border-radius: 0 4px 4px 0; font-size: 0.9rem;
+}
+.fa-explanation-box {
+    margin-top: 5px; font-size: 0.85rem; color: #444; border-top: 1px dotted #ccc; padding-top: 4px;
+}
+
+/* استایل‌های کارنامه تحلیلی چاپی */
+.student-analysis { margin-top: 8px; font-size: 0.9rem; padding-left: 33px; }
+.analysis-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.analysis-row.correct { color: #006400; }
+.analysis-row.wrong { color: #8b0000; }
+.analysis-label { font-weight: bold; font-size: 0.85rem; }
+
+/* دکمه‌های شناور کنترل چاپ (اصلاح شده و کوچک) */
+.print-controls-overlay {
+    position: fixed; 
+    bottom: 20px; 
+    left: 50%; 
+    transform: translateX(-50%);
+    display: flex; 
+    gap: 15px;
+    background: rgba(0,0,0,0.85);
+    padding: 10px 25px;
+    border-radius: 50px;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+    z-index: 10000;
+}
+
+/* این کلاس‌ها با JS هماهنگ شدند ولی استایلشان کوچک شد */
+.btn-big-print, .btn-big-close {
+    background: transparent;
+    color: white;
+    padding: 8px 15px;
+    font-size: 0.95rem;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-big-print { background: #27ae60; border-color: #27ae60; }
+.btn-big-print:hover { background: #2ecc71; }
+
+.btn-big-close { background: #c0392b; border-color: #c0392b; }
+.btn-big-close:hover { background: #e74c3c; }
+
+/* مدیا کوئری مخصوص پرینتر واقعی */
+@media print {
+    .print-controls-overlay { display: none !important; }
+    body > :not(#print-layer-container) { display: none !important; }
+    #print-layer-container { 
+        position: absolute; width: 100%; height: auto; 
+        background: white; padding: 0; overflow: visible; display: block;
+    }
+    .printable-paper { 
+        width: 100%; max-width: none; margin: 0; box-shadow: none; padding: 0;
+    }
+    .paper-question { page-break-inside: avoid; }
+    
+    /* صرفه‌جویی در جوهر */
+    .answer-key-box { background: none; border: 1px solid #000; }
+    .q-category { border: 1px solid #000; background: none; color: black; }
+    .badge-mode { border: 1px solid #000; background: none; }
+}
+
+/* ریسپانسیو موبایل */
+@media (max-width: 600px) {
+    .options-grid { grid-template-columns: 1fr; }
+    .paper-options { grid-template-columns: 1fr 1fr; }
+    .quiz-card { width: 100%; }
+    .printable-paper { padding: 10mm; width: 100%; }
+}
+/* css/quiz.css - (Update & Additions) */
+
+/* ... کدهای قبلی سر جای خود بمانند ... */
+
+/* تغییرات در کارت‌های انتخاب حالت (Student Mode Select) */
+.mode-card {
+    /* تنظیمات قبلی حفظ شود */
+    cursor: default; /* دیگر کل کارت کلیک‌خور نیست */
+    padding-bottom: 20px;
+}
+
+/* مخفی کردن دکمه‌های عملیاتی تا زمانی که موس روی کارت برود (اختیاری - اینجا همیشه نمایش می‌دهیم) */
+.mode-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    margin-top: 15px;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+.btn-mode-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    font-family: inherit;
+    width: 100%;
+}
+
+.btn-start-online {
+    background: #4facfe;
+    color: white;
+    font-weight: bold;
+}
+.btn-start-online:hover { background: #00f2fe; box-shadow: 0 4px 10px rgba(79, 172, 254, 0.3); }
+
+.btn-dl-pdf {
+    background: #f1f2f6;
+    color: #57606f;
+    border: 1px solid #dfe4ea;
+}
+.btn-dl-pdf:hover { background: #eccc68; color: white; border-color: #eccc68; }
+
+/* استایل باکس تاریخچه در پنل معلم */
+.history-box {
+    background: #fff8e1; /* رنگ زرد ملایم برای تمایز */
+    border: 2px dashed #f39c12;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.history-info h4 { margin: 0 0 5px 0; color: #d35400; }
+.history-info p { margin: 0; font-size: 0.9rem; color: #666; }
+
+.history-actions { display: flex; gap: 10px; }
+
+/* ... بقیه کدهای CSS قبلی ... */

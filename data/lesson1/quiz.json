@@ -1,0 +1,30 @@
+{
+    "lessonId": 1,
+    "timeLimit": 2,
+    "questions": [
+        {
+            "id": 1,
+            "question": "معنی کلمه <b>Library</b> چیست؟",
+            "options": ["آزمایشگاه", "کتابخانه", "کلاس درس", "حیاط مدرسه"],
+            "correct": 1
+        },
+        {
+            "id": 2,
+            "question": "کدام جمله صحیح است؟",
+            "options": ["My name are Ali.", "He constitute a student.", "I am a student.", "She are my teacher."],
+            "correct": 2
+        },
+        {
+            "id": 3,
+            "question": "پاسخ صحیح به 'Nice to meet you' چیست؟",
+            "options": ["Good morning.", "Nice to meet you too.", "I am fine.", "Goodbye."],
+            "correct": 1
+        },
+        {
+            "id": 4,
+            "question": "معنی کلمه <b>Classmate</b> چیست؟",
+            "options": ["هم‌کلاسی", "معلم", "همسایه", "مدیر"],
+            "correct": 0
+        }
+    ]
+}

@@ -1,0 +1,55 @@
+/* نمونه ساختار فایل grammar.json */
+[
+  {
+    "id": "g1",
+    "lesson_id": 1,
+    "title": {
+      "en": "Simple Present Tense",
+      "fa": "زمان حال ساده"
+    },
+    "level": "Basic",
+    "description": "استفاده از حال ساده برای بیان عادات و حقایق کلی.",
+    
+    /* محتوا به بخش‌های کوچک تقسیم شده تا کاربر خسته نشود */
+    "sections": [
+      {
+        "type": "explanation",
+        "content": "ما از حال ساده برای صحبت در مورد کارهایی که به صورت تکراری یا عادت انجام می‌دهیم استفاده می‌کنیم."
+      },
+      {
+        "type": "formula",
+        "content": "Subject + Verb (base form) + ..."
+      },
+      {
+        "type": "examples",
+        "items": [
+          {
+            "en": "I play football every day.",
+            "fa": "من هر روز فوتبال بازی می‌کنم.",
+            "audio": "audio/grammar/g1_ex1.mp3"
+          },
+          {
+            "en": "She works in a bank.",
+            "fa": "او در یک بانک کار می‌کند.",
+            "highlight": "works" /* برای رنگی کردن فعل سوم شخص */
+          }
+        ]
+      },
+      {
+        "type": "warning", /* باکس زرد رنگ برای نکات مهم */
+        "title": "نکته مهم!",
+        "content": "برای سوم شخص مفرد (He, She, It) حتماً به آخر فعل 's' یا 'es' اضافه کنید."
+      }
+    ],
+
+    /* آزمون کوچک انتهای درس برای تثبیت یادگیری */
+    "quiz": [
+      {
+        "question": "She _____ to school every day.",
+        "options": ["go", "goes", "going"],
+        "correct_index": 1,
+        "explanation": "چون فاعل She است، فعل 's' می‌گیرد."
+      }
+    ]
+  }
+]

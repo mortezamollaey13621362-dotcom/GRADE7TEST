@@ -1,0 +1,339 @@
+{
+  "flashcards": [
+    {
+      "cardId": "fc_wb_workbook_01",
+      "type": "vocabulary",
+      "lessonId": "1",
+      "front": {
+        "word": "workbook",
+        "phonetic": "/ˈwɜːrk.bʊk/",
+        "audio": {
+          "american": "/audio/words/workbook_ame.mp3",
+          "british": "/audio/words/workbook_bre.mp3"
+        },
+        "hint": "📘 Used at school"
+      },
+      "back": {
+        "meaning": "کتاب کار",
+        "simpleDefinition": "a book with exercises for students",
+        "example": {
+          "sentence": "I practice English in my workbook.",
+          "translation": "من انگلیسی را در کتاب کارم تمرین می‌کنم."
+        },
+        "audio": {
+          "exampleAmerican": "/audio/sentences/workbook_ex_ame.mp3",
+          "exampleBritish": "/audio/sentences/workbook_ex_bre.mp3"
+        },
+        "register": "neutral"
+      },
+      "extras": {
+        "collocation": "English workbook",
+        "commonMistake": "Do not confuse with textbook",
+        "image": "/images/flashcards/workbook.png"
+      },
+      "learningControl": {
+        "level": "A2",
+        "tags": ["school", "education"],
+        "difficulty": 2
+      },
+      "spacedRepetition": {
+        "lastReviewed": null,
+        "interval": 1,
+        "easeFactor": 2.5
+      },
+      "ui": {
+        "flipDirection": "horizontal",
+        "theme": "light",
+        "showImage": true
+      }
+    },
+    {
+      "cardId": "fc_wb_teacher_01",
+      "type": "vocabulary",
+      "lessonId": "1",
+      "front": {
+        "word": "teacher",
+        "phonetic": "/ˈtiːtʃər/",
+        "audio": {
+          "american": "/audio/words/teacher_ame.mp3",
+          "british": "/audio/words/teacher_bre.mp3"
+        },
+        "hint": "👨‍🏫 Teaches students"
+      },
+      "back": {
+        "meaning": "معلم",
+        "simpleDefinition": "a person who teaches students",
+        "example": {
+          "sentence": "My teacher is very kind.",
+          "translation": "معلم من بسیار مهربان است."
+        },
+        "audio": {
+          "exampleAmerican": "/audio/sentences/teacher_ex_ame.mp3",
+          "exampleBritish": "/audio/sentences/teacher_ex_bre.mp3"
+        },
+        "register": "neutral"
+      },
+      "learningControl": {
+        "level": "A1",
+        "tags": ["school", "profession"],
+        "difficulty": 1
+      }
+    },
+    {
+      "cardId": "fc_wb_student_01",
+      "type": "vocabulary",
+      "lessonId": "1",
+      "front": {
+        "word": "student",
+        "phonetic": "/ˈstuːdnt/",
+        "audio": {
+          "american": "/audio/words/student_ame.mp3",
+          "british": "/audio/words/student_bre.mp3"
+        },
+        "hint": "👨‍🎓 Learns at school"
+      },
+      "back": {
+        "meaning": "دانش‌آموز",
+        "simpleDefinition": "a person who studies at school",
+        "example": {
+          "sentence": "I am a good student.",
+          "translation": "من دانش‌آموز خوبی هستم."
+        },
+        "audio": {
+          "exampleAmerican": "/audio/sentences/student_ex_ame.mp3",
+          "exampleBritish": "/audio/sentences/student_ex_bre.mp3"
+        },
+        "register": "neutral"
+      },
+      "learningControl": {
+        "level": "A1",
+        "tags": ["school", "education"],
+        "difficulty": 1
+      }
+    },
+    {
+      "cardId": "fc_wb_manager_01",
+      "type": "vocabulary",
+      "lessonId": "1",
+      "front": {
+        "word": "manager",
+        "phonetic": "/ˈmænɪdʒər/",
+        "audio": {
+          "american": "/audio/words/manager_ame.mp3",
+          "british": "/audio/words/manager_bre.mp3"
+        },
+        "hint": "👔 In an office"
+      },
+      "back": {
+        "meaning": "مدیر",
+        "simpleDefinition": "a person who controls an organization",
+        "example": {
+          "sentence": "He is the manager of the company.",
+          "translation": "او مدیر شرکت است."
+        },
+        "audio": {
+          "exampleAmerican": "/audio/sentences/manager_ex_ame.mp3",
+          "exampleBritish": "/audio/sentences/manager_ex_bre.mp3"
+        },
+        "register": "formal"
+      },
+      "learningControl": {
+        "level": "A1",
+        "tags": ["business", "profession"],
+        "difficulty": 2
+      }
+    },
+    {
+      "cardId": "fc_wb_classroom_01",
+      "type": "vocabulary",
+      "lessonId": "1",
+      "front": {
+        "word": "classroom",
+        "phonetic": "/ˈklæsruːm/",
+        "audio": {
+          "american": "/audio/words/classroom_ame.mp3",
+          "british": "/audio/words/classroom_bre.mp3"
+        },
+        "hint": "🏫 Where students learn"
+      },
+      "back": {
+        "meaning": "کلاس درس",
+        "simpleDefinition": "a room where students are taught",
+        "example": {
+          "sentence": "Our classroom is big and clean.",
+          "translation": "کلاس ما بزرگ و تمیز است."
+        },
+        "audio": {
+          "exampleAmerican": "/audio/sentences/classroom_ex_ame.mp3",
+          "exampleBritish": "/audio/sentences/classroom_ex_bre.mp3"
+        },
+        "register": "neutral"
+      },
+      "learningControl": {
+        "level": "A1",
+        "tags": ["school", "place"],
+        "difficulty": 1
+      }
+    },
+    {
+      "cardId": "fc_wb_homework_01",
+      "type": "vocabulary",
+      "lessonId": "1",
+      "front": {
+        "word": "homework",
+        "phonetic": "/ˈhəʊmwɜːk/",
+        "audio": {
+          "american": "/audio/words/homework_ame.mp3",
+          "british": "/audio/words/homework_bre.mp3"
+        },
+        "hint": "📝 Done at home"
+      },
+      "back": {
+        "meaning": "تکلیف خانه",
+        "simpleDefinition": "school work done at home",
+        "example": {
+          "sentence": "I do my homework every day.",
+          "translation": "من هر روز تکلیفم را انجام می‌دهم."
+        },
+        "audio": {
+          "exampleAmerican": "/audio/sentences/homework_ex_ame.mp3",
+          "exampleBritish": "/audio/sentences/homework_ex_bre.mp3"
+        },
+        "register": "neutral"
+      },
+      "learningControl": {
+        "level": "A1",
+        "tags": ["school", "home"],
+        "difficulty": 1
+      }
+    },
+    {
+      "cardId": "fc_wb_notebook_01",
+      "type": "vocabulary",
+      "lessonId": "1",
+      "front": {
+        "word": "notebook",
+        "phonetic": "/ˈnəʊtbʊk/",
+        "audio": {
+          "american": "/audio/words/notebook_ame.mp3",
+          "british": "/audio/words/notebook_bre.mp3"
+        },
+        "hint": "📓 For writing notes"
+      },
+      "back": {
+        "meaning": "دفتر",
+        "simpleDefinition": "a book for writing notes",
+        "example": {
+          "sentence": "Write the words in your notebook.",
+          "translation": "کلمات را در دفترت بنویس."
+        },
+        "audio": {
+          "exampleAmerican": "/audio/sentences/notebook_ex_ame.mp3",
+          "exampleBritish": "/audio/sentences/notebook_ex_bre.mp3"
+        },
+        "register": "neutral"
+      },
+      "learningControl": {
+        "level": "A1",
+        "tags": ["school", "stationery"],
+        "difficulty": 1
+      }
+    },
+    {
+      "cardId": "fc_wb_pencil_01",
+      "type": "vocabulary",
+      "lessonId": "1",
+      "front": {
+        "word": "pencil",
+        "phonetic": "/ˈpensl/",
+        "audio": {
+          "american": "/audio/words/pencil_ame.mp3",
+          "british": "/audio/words/pencil_bre.mp3"
+        },
+        "hint": "✏️ For writing and drawing"
+      },
+      "back": {
+        "meaning": "مداد",
+        "simpleDefinition": "a tool for writing or drawing",
+        "example": {
+          "sentence": "I have a red pencil.",
+          "translation": "من یک مداد قرمز دارم."
+        },
+        "audio": {
+          "exampleAmerican": "/audio/sentences/pencil_ex_ame.mp3",
+          "exampleBritish": "/audio/sentences/pencil_ex_bre.mp3"
+        },
+        "register": "neutral"
+      },
+      "learningControl": {
+        "level": "A1",
+        "tags": ["school", "stationery"],
+        "difficulty": 1
+      }
+    },
+    {
+      "cardId": "fc_wb_dictionary_01",
+      "type": "vocabulary",
+      "lessonId": "1",
+      "front": {
+        "word": "dictionary",
+        "phonetic": "/ˈdɪkʃənri/",
+        "audio": {
+          "american": "/audio/words/dictionary_ame.mp3",
+          "british": "/audio/words/dictionary_bre.mp3"
+        },
+        "hint": "📚 For word meanings"
+      },
+      "back": {
+        "meaning": "فرهنگ لغت",
+        "simpleDefinition": "a book with words and their meanings",
+        "example": {
+          "sentence": "Use a dictionary to find word meanings.",
+          "translation": "از فرهنگ لغت برای پیدا کردن معنی کلمات استفاده کن."
+        },
+        "audio": {
+          "exampleAmerican": "/audio/sentences/dictionary_ex_ame.mp3",
+          "exampleBritish": "/audio/sentences/dictionary_ex_bre.mp3"
+        },
+        "register": "neutral"
+      },
+      "learningControl": {
+        "level": "A2",
+        "tags": ["book", "learning"],
+        "difficulty": 2
+      }
+    },
+    {
+      "cardId": "fc_wb_exercise_01",
+      "type": "vocabulary",
+      "lessonId": "1",
+      "front": {
+        "word": "exercise",
+        "phonetic": "/ˈeksərsaɪz/",
+        "audio": {
+          "american": "/audio/words/exercise_ame.mp3",
+          "british": "/audio/words/exercise_bre.mp3"
+        },
+        "hint": "💪 For practice"
+      },
+      "back": {
+        "meaning": "تمرین",
+        "simpleDefinition": "an activity to practice skills",
+        "example": {
+          "sentence": "Do exercise 3 on page 10.",
+          "translation": "تمرین ۳ صفحه ۱۰ را انجام بده."
+        },
+        "audio": {
+          "exampleAmerican": "/audio/sentences/exercise_ex_ame.mp3",
+          "exampleBritish": "/audio/sentences/exercise_ex_bre.mp3"
+        },
+        "register": "neutral"
+      },
+      "learningControl": {
+        "level": "A2",
+        "tags": ["practice", "school"],
+        "difficulty": 2
+      }
+    }
+  ]
+}

@@ -1,0 +1,223 @@
+{
+  "words": {
+    "wb_w_1_1": {
+      "id": "wb_w_1_1",
+      "word": "workbook",
+      "phonetic": {
+        "ipa": { "american": "/ˈwɝːk.bʊk/", "british": "/ˈwɜːk.bʊk/" },
+        "respelling": { "american": "WURK-book", "british": "WUHK-book" }
+      },
+      "level": "A2",
+      "partOfSpeech": ["noun"],
+      "persian": { "main": "کتاب کار", "short": "کتاب تمرین" },
+      "meanings": [{
+        "definition": { "simple": "a book with exercises for students" },
+        "persianDefinition": "کتابی شامل تمرین‌ها",
+        "example": {
+          "sentence": "Students use a workbook to practice English.",
+          "translation": "دانش‌آموزان از کتاب کار برای تمرین انگلیسی استفاده می‌کنند."
+        },
+        "synonyms": ["exercise book"],
+        "antonyms": []
+      }]
+    },
+    
+    "wb_w_1_2": {
+      "id": "wb_w_1_2",
+      "word": "teacher",
+      "phonetic": {
+        "ipa": { "american": "/ˈtiːtʃər/", "british": "/ˈtiːtʃə/" },
+        "respelling": { "american": "TEE-chur", "british": "TEE-chuh" }
+      },
+      "level": "A1",
+      "partOfSpeech": ["noun"],
+      "persian": { "main": "معلم", "short": "آموزگار" },
+      "meanings": [{
+        "definition": { "simple": "a person who teaches students" },
+        "persianDefinition": "شخصی که آموزش می‌دهد",
+        "example": {
+          "sentence": "My teacher is very kind.",
+          "translation": "معلم من بسیار مهربان است."
+        },
+        "synonyms": ["instructor", "educator"],
+        "antonyms": ["student"]
+      }]
+    },
+    
+    "wb_w_1_3": {
+      "id": "wb_w_1_3",
+      "word": "student",
+      "phonetic": {
+        "ipa": { "american": "/ˈstuːdnt/", "british": "/ˈstjuːdnt/" },
+        "respelling": { "american": "STOO-dent", "british": "STYOO-dent" }
+      },
+      "level": "A1",
+      "partOfSpeech": ["noun"],
+      "persian": { "main": "دانش‌آموز", "short": "شاگرد" },
+      "meanings": [{
+        "definition": { "simple": "a person who is studying" },
+        "persianDefinition": "شخصی که در حال یادگیری است",
+        "example": {
+          "sentence": "I am a student at Tehran school.",
+          "translation": "من دانش‌آموز مدرسه تهران هستم."
+        },
+        "synonyms": ["learner", "pupil"],
+        "antonyms": ["teacher"]
+      }]
+    },
+    
+    "wb_w_1_4": {
+      "id": "wb_w_1_4",
+      "word": "manager",
+      "phonetic": {
+        "ipa": { "american": "/ˈmænɪdʒər/", "british": "/ˈmænɪdʒə/" },
+        "respelling": { "american": "MAN-i-jur", "british": "MAN-i-juh" }
+      },
+      "level": "A1",
+      "partOfSpeech": ["noun"],
+      "persian": { "main": "مدیر", "short": "سرپرست" },
+      "meanings": [{
+        "definition": { "simple": "a person who controls an organization" },
+        "persianDefinition": "شخصی که سازمانی را مدیریت می‌کند",
+        "example": {
+          "sentence": "He is a good manager.",
+          "translation": "او یک مدیر خوب است."
+        },
+        "synonyms": ["director", "supervisor"],
+        "antonyms": ["employee"]
+      }]
+    },
+    
+    "wb_w_1_5": {
+      "id": "wb_w_1_5",
+      "word": "classroom",
+      "phonetic": {
+        "ipa": { "american": "/ˈklæsruːm/", "british": "/ˈklɑːsruːm/" },
+        "respelling": { "american": "KLAS-room", "british": "KLAHS-room" }
+      },
+      "level": "A1",
+      "partOfSpeech": ["noun"],
+      "persian": { "main": "کلاس درس", "short": "اتاق درس" },
+      "meanings": [{
+        "definition": { "simple": "a room where students are taught" },
+        "persianDefinition": "اتاقی که دانش‌آموزان در آن درس می‌خوانند",
+        "example": {
+          "sentence": "Our classroom is big and clean.",
+          "translation": "کلاس ما بزرگ و تمیز است."
+        },
+        "synonyms": ["class", "lecture room"],
+        "antonyms": []
+      }]
+    },
+    
+    "wb_w_1_6": {
+      "id": "wb_w_1_6",
+      "word": "homework",
+      "phonetic": {
+        "ipa": { "american": "/ˈhəʊmwɜːk/", "british": "/ˈhəʊmwɜːk/" },
+        "respelling": { "american": "HOHM-wurk", "british": "HOHM-wurk" }
+      },
+      "level": "A1",
+      "partOfSpeech": ["noun"],
+      "persian": { "main": "تکلیف خانه", "short": "تمرین خانه" },
+      "meanings": [{
+        "definition": { "simple": "school work done at home" },
+        "persianDefinition": "کار مدرسه‌ای که در خانه انجام می‌شود",
+        "example": {
+          "sentence": "I do my homework every day.",
+          "translation": "من هر روز تکلیفم را انجام می‌دهم."
+        },
+        "synonyms": ["assignment", "schoolwork"],
+        "antonyms": []
+      }]
+    },
+    
+    "wb_w_1_7": {
+      "id": "wb_w_1_7",
+      "word": "notebook",
+      "phonetic": {
+        "ipa": { "american": "/ˈnəʊtbʊk/", "british": "/ˈnəʊtbʊk/" },
+        "respelling": { "american": "NOHT-book", "british": "NOHT-book" }
+      },
+      "level": "A1",
+      "partOfSpeech": ["noun"],
+      "persian": { "main": "دفتر", "short": "کتابچه" },
+      "meanings": [{
+        "definition": { "simple": "a book for writing notes" },
+        "persianDefinition": "کتابی برای نوشتن یادداشت",
+        "example": {
+          "sentence": "Write the words in your notebook.",
+          "translation": "کلمات را در دفترت بنویس."
+        },
+        "synonyms": ["notepad", "exercise book"],
+        "antonyms": []
+      }]
+    },
+    
+    "wb_w_1_8": {
+      "id": "wb_w_1_8",
+      "word": "pencil",
+      "phonetic": {
+        "ipa": { "american": "/ˈpensl/", "british": "/ˈpensl/" },
+        "respelling": { "american": "PEN-sul", "british": "PEN-sul" }
+      },
+      "level": "A1",
+      "partOfSpeech": ["noun"],
+      "persian": { "main": "مداد", "short": "قلم" },
+      "meanings": [{
+        "definition": { "simple": "a tool for writing or drawing" },
+        "persianDefinition": "وسیله‌ای برای نوشتن یا نقاشی کردن",
+        "example": {
+          "sentence": "I have a red pencil.",
+          "translation": "من یک مداد قرمز دارم."
+        },
+        "synonyms": ["writing tool"],
+        "antonyms": ["pen"]
+      }]
+    },
+    
+    "wb_w_1_9": {
+      "id": "wb_w_1_9",
+      "word": "dictionary",
+      "phonetic": {
+        "ipa": { "american": "/ˈdɪkʃəneri/", "british": "/ˈdɪkʃənri/" },
+        "respelling": { "american": "DIK-shuh-ner-ee", "british": "DIK-shuh-nree" }
+      },
+      "level": "A2",
+      "partOfSpeech": ["noun"],
+      "persian": { "main": "فرهنگ لغت", "short": "واژه‌نامه" },
+      "meanings": [{
+        "definition": { "simple": "a book with words and their meanings" },
+        "persianDefinition": "کتابی شامل کلمات و معانی آن‌ها",
+        "example": {
+          "sentence": "Use a dictionary to find word meanings.",
+          "translation": "از فرهنگ لغت برای پیدا کردن معنی کلمات استفاده کن."
+        },
+        "synonyms": ["lexicon", "wordbook"],
+        "antonyms": []
+      }]
+    },
+    
+    "wb_w_1_10": {
+      "id": "wb_w_1_10",
+      "word": "exercise",
+      "phonetic": {
+        "ipa": { "american": "/ˈeksərsaɪz/", "british": "/ˈeksəsaɪz/" },
+        "respelling": { "american": "EK-sur-size", "british": "EK-suh-size" }
+      },
+      "level": "A2",
+      "partOfSpeech": ["noun"],
+      "persian": { "main": "تمرین", "short": "ورزش" },
+      "meanings": [{
+        "definition": { "simple": "an activity to practice skills" },
+        "persianDefinition": "فعالیتی برای تمرین مهارت‌ها",
+        "example": {
+          "sentence": "Do exercise 3 on page 10.",
+          "translation": "تمرین ۳ صفحه ۱۰ را انجام بده."
+        },
+        "synonyms": ["practice", "workout"],
+        "antonyms": []
+      }]
+    }
+  }
+}

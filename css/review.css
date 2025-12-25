@@ -1,0 +1,260 @@
+/* css/review.css */
+
+.review-wrapper {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 15px;
+    text-align: center;
+}
+
+/* --- نوار پیشرفت --- */
+.progress-bar-container {
+    width: 100%;
+    height: 6px;
+    background: #eee;
+    border-radius: 3px;
+    margin-bottom: 25px;
+    overflow: hidden;
+}
+.progress-fill {
+    height: 100%;
+    background: #4a90e2;
+    width: 0%;
+    transition: width 0.4s ease;
+}
+
+/* --- کانتینر محتوا --- */
+.review-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    border: 1px solid #f0f0f0;
+}
+
+/* --- تایپ ۱: گرامر --- */
+.grammar-box {
+    text-align: right;
+    width: 100%;
+}
+.grammar-title {
+    color: #e74c3c;
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #fcebeb;
+    padding-bottom: 5px;
+    display: inline-block;
+}
+.grammar-rule {
+    background: #fdf2f2;
+    color: #c0392b;
+    padding: 10px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 1.1rem;
+    direction: ltr;
+    margin: 15px 0;
+    text-align: center;
+    border: 1px dashed #e74c3c;
+}
+.grammar-example {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 15px;
+    text-align: center;
+    border-left: 4px solid #4a90e2;
+}
+.en-text { font-weight: bold; color: #2c3e50; display: block; margin-bottom: 5px; font-size: 1.2rem; }
+.fa-text { color: #7f8c8d; font-size: 0.95rem; }
+
+/* --- تایپ ۲: مرتب‌سازی جمله --- */
+.scramble-area {
+    width: 100%;
+}
+.word-drop-zone {
+    min-height: 60px;
+    border-bottom: 2px solid #ddd;
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    padding: 10px;
+    direction: ltr; /* اصلاح جهت چینش به چپ‌چین برای انگلیسی */
+}
+.word-bank {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    direction: ltr; /* اصلاح جهت بانک کلمات */
+}
+.word-chip {
+    background: #eef2ff;
+    color: #4a90e2;
+    border: 1px solid #dce4ff;
+    padding: 8px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+    user-select: none;
+}
+.word-chip:hover { transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.word-chip.used { opacity: 0; pointer-events: none; } /* مخفی شدن در بانک */
+.word-chip.placed { background: #4a90e2; color: white; } /* استایل در ناحیه جواب */
+
+/* --- تایپ ۳: کوییز سریع --- */
+.quiz-options {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+.quiz-btn {
+    background: white;
+    border: 2px solid #eee;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+.quiz-btn:hover { background: #f9f9f9; border-color: #ddd; }
+.quiz-btn.correct { background: #d4edda; border-color: #c3e6cb; color: #155724; }
+.quiz-btn.wrong { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+
+/* --- دکمه ادامه --- */
+.continue-btn {
+    margin-top: 25px;
+    background: #2c3e50;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: none; /* پیش‌فرض مخفی */
+    animation: fadeIn 0.3s;
+}
+.continue-btn:hover { background: #34495e; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+/* css/review.css */
+
+/* --- Tab Selector Menu --- */
+.review-tabs-menu {
+    padding: 20px;
+    text-align: center;
+}
+
+.menu-title {
+    color: var(--text-color);
+    margin-bottom: 5px;
+}
+
+.menu-subtitle {
+    color: var(--text-secondary);
+    margin-bottom: 25px;
+    font-size: 0.9em;
+}
+
+.tabs-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+}
+
+.review-tab-card {
+    background: var(--bg-secondary); /* رنگ پس‌زمینه کارت */
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-align: right; /* راست‌چین برای متن فارسی */
+}
+
+.review-tab-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-color: var(--primary-color);
+}
+
+.tab-icon {
+    font-size: 1.8em;
+    margin-left: 15px;
+    background: rgba(var(--primary-rgb), 0.1);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.tab-info {
+    flex: 1;
+}
+
+.tab-info h3 {
+    margin: 0 0 5px 0;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.tab-info p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.q-count {
+    display: inline-block;
+    margin-top: 5px;
+    font-size: 0.7rem;
+    background: var(--bg-main);
+    padding: 2px 8px;
+    border-radius: 10px;
+    color: var(--primary-color);
+}
+
+.tab-arrow {
+    color: var(--text-secondary);
+    font-size: 1.2em;
+}
+
+/* --- Review Header (Active Session) --- */
+.review-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.back-to-tabs-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 5px;
+}
+
+/* --- Existing Styles (Previous Fixes) --- */
+.word-drop-zone, .word-bank, .rule-box, .example-box, .options-list {
+    direction: ltr !important; /* LTR Fix */
+}
+/* ... (بقیه استایل‌های قبلی شما برای کارت‌ها و دکمه‌ها حفظ شوند) */

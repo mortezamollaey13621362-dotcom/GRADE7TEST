@@ -1,0 +1,413 @@
+/* css/grammar.css */
+
+/* --- 1. هدر و کانتینر اصلی --- */
+.section-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.text-gradient {
+    background: linear-gradient(45deg, #6200ea, #9d46ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+}
+
+.level-badge {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    display: inline-block;
+    margin-top: 5px;
+}
+
+/* --- 2. استایل تب‌ها (Tabs) --- */
+.grammar-tabs-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 5px;
+    overflow-x: auto; /* اسکرول افقی در موبایل */
+}
+
+.grammar-tab-btn {
+    background: transparent;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    color: #777;
+    cursor: pointer;
+    font-weight: 700;
+    font-family: inherit;
+    position: relative;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.grammar-tab-btn:hover {
+    color: #444;
+}
+
+.grammar-tab-btn.active {
+    color: #6200ea;
+}
+
+/* خط متحرک زیر تب فعال */
+.grammar-tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -7px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: #6200ea;
+    border-radius: 5px 5px 0 0;
+    animation: slideTab 0.3s ease-out;
+}
+
+@keyframes slideTab {
+    from { width: 0; left: 50%; }
+    to { width: 100%; left: 0; }
+}
+
+/* انیمیشن محتوا هنگام تغییر تب */
+.fade-in {
+    animation: fadeInContent 0.5s ease;
+}
+
+@keyframes fadeInContent {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- 3. کارت‌های محتوای گرامر --- */
+.grammar-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.grammar-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: 1px solid #f0f0f0;
+    transition: transform 0.2s;
+}
+
+.grammar-card:hover {
+    transform: translateY(-2px);
+}
+
+.grammar-card h4, .grammar-card h5 {
+    color: #333;
+    margin-bottom: 15px;
+    font-weight: bold;
+    border-bottom: 2px solid #f7f7f7;
+    padding-bottom: 10px;
+}
+
+/* استایل مخصوص کارت Intro */
+.intro-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    background: linear-gradient(to right, #ffffff, #f9fbfc);
+    border-left: 5px solid #6200ea;
+}
+
+.grammar-icon {
+    font-size: 2rem;
+    background: #eee;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+/* استایل فرمول */
+.formula-box {
+    display: block;
+    background: #282c34;
+    color: #abb2bf;
+    padding: 15px;
+    border-radius: 8px;
+    font-family: 'Courier New', Courier, monospace;
+    direction: ltr;
+    text-align: center;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+}
+
+/* استایل جدول */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.grammar-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 400px; /* جلوگیری از فشرده شدن در موبایل */
+}
+
+.grammar-table th {
+    background: #f8f9fa;
+    padding: 12px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.grammar-table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.badge-verb {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-family: sans-serif;
+}
+
+/* استایل هشدار (Warning) */
+.warning-card {
+    background: #fff8e1;
+    border: 1px solid #ffe0b2;
+    color: #795548;
+}
+
+/* استایل لیست مثال‌ها */
+.example-list {
+    list-style: none;
+    padding: 0;
+}
+
+.example-item {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 0;
+    border-bottom: 1px dashed #eee;
+}
+
+.example-item:last-child {
+    border-bottom: none;
+}
+
+.en-text {
+    font-weight: bold;
+    color: #333;
+    direction: ltr;
+    text-align: left;
+    margin-bottom: 4px;
+}
+
+.fa-text {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* --- 4. دکمه شروع آزمون (پایین صفحه) --- */
+.quiz-section {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    padding-bottom: 30px;
+}
+
+.quiz-info-card {
+    background: #f9f9f9;
+    padding: 20px 30px;
+    border-radius: 15px;
+    text-align: center;
+    border: 1px solid #e0e0e0;
+    width: 100%;
+}
+
+.btn-quiz-start {
+    background: linear-gradient(135deg, #6200ea, #7c4dff);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(98, 0, 234, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+    margin-top: 10px;
+}
+
+.btn-quiz-start:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(98, 0, 234, 0.4);
+}
+
+/* --- 5. مودال آزمون (Quiz Modal) --- */
+.quiz-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.quiz-box {
+    background: white;
+    width: 100%;
+    max-width: 450px;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.animate-pop {
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* هدر مودال */
+.quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.close-quiz {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #999;
+    cursor: pointer;
+}
+
+/* نوار پیشرفت */
+.progress-bar-bg {
+    width: 100%;
+    height: 8px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    margin-bottom: 25px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6200ea, #b388ff);
+    transition: width 0.3s ease;
+}
+
+/* سوال */
+.quiz-question {
+    font-size: 1.3rem;
+    color: #333;
+    margin-bottom: 30px;
+    direction: ltr; /* انگلیسی */
+    font-weight: 700;
+}
+
+/* گزینه‌ها */
+.quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.quiz-option-btn {
+    background: #fff;
+    border: 2px solid #e0e0e0;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    color: #444;
+}
+
+.quiz-option-btn:hover:not([disabled]) {
+    border-color: #6200ea;
+    background: #f4edff;
+}
+
+/* حالت صحیح و غلط */
+.quiz-option-btn.correct {
+    background: #4caf50 !important;
+    color: white !important;
+    border-color: #4caf50 !important;
+}
+
+.quiz-option-btn.wrong {
+    background: #f44336 !important;
+    color: white !important;
+    border-color: #f44336 !important;
+}
+
+/* --- 6. صفحه نتایج (Result Screen) --- */
+.result-box {
+    text-align: center;
+}
+
+.result-icon {
+    font-size: 4rem;
+    margin-bottom: 10px;
+}
+
+.result-msg {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.quiz-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.btn-quiz-restart {
+    background: #6200ea;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.btn-quiz-close-final {
+    background: #f0f0f0;
+    color: #333;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+}

@@ -1,0 +1,101 @@
+{
+  "games": [
+    {
+      "id": "mem_l1_vocab_1",
+      "type": "memory",
+      "title": "حافظه لغات – سلام و خداحافظی",
+      "pairs": [
+        { "en": "Hello", "fa": "سلام" },
+        { "en": "Hi", "fa": "سلام (خودمانی)" },
+        { "en": "Goodbye", "fa": "خداحافظ" },
+        { "en": "Bye", "fa": "خداحافظ (خودمانی)" },
+        { "en": "Good morning", "fa": "صبح بخیر" },
+        { "en": "Good afternoon", "fa": "ظهر بخیر" },
+        { "en": "Good evening", "fa": "عصر بخیر" }
+      ]
+    },
+
+    {
+      "id": "mem_l1_vocab_2",
+      "type": "memory",
+      "title": "حافظه لغات – معرفی خود",
+      "pairs": [
+        { "en": "My", "fa": "ـِ من" },
+        { "en": "Name", "fa": "نام" },
+        { "en": "Is", "fa": "است" },
+        { "en": "I", "fa": "من" },
+        { "en": "Am", "fa": "هستم" },
+        { "en": "What", "fa": "چه" },
+        { "en": "Your", "fa": "مال تو" }
+      ]
+    },
+
+    {
+      "id": "mem_l1_vocab_3",
+      "type": "memory",
+      "title": "حافظه لغات – افراد و مکان",
+      "pairs": [
+        { "en": "Teacher", "fa": "معلم" },
+        { "en": "Student", "fa": "دانش‌آموز" },
+        { "en": "School", "fa": "مدرسه" },
+        { "en": "Class", "fa": "کلاس" }
+      ]
+    },
+
+    {
+      "id": "scr_l1_word_1",
+      "type": "scramble",
+      "title": "مرتب‌سازی حروف – لغات",
+      "items": [
+        { "word": "hello", "hint": "سلام" },
+        { "word": "goodbye", "hint": "خداحافظ" },
+        { "word": "teacher", "hint": "معلم" },
+        { "word": "student", "hint": "دانش‌آموز" }
+      ]
+    },
+
+    {
+      "id": "scr_l1_phrase_1",
+      "type": "scramble",
+      "title": "مرتب‌سازی جملات – معرفی",
+      "items": [
+        { "word": "mynameisali", "hint": "اسم من علی است" },
+        { "word": "iamastudent", "hint": "من یک دانش‌آموز هستم" },
+        { "word": "iamateacher", "hint": "من یک معلم هستم" }
+      ]
+    },
+
+    {
+      "id": "scr_l1_question_1",
+      "type": "scramble",
+      "title": "مرتب‌سازی سوال‌ها",
+      "items": [
+        { "word": "whatsyourname", "hint": "اسم تو چیست؟" },
+        { "word": "howareyou", "hint": "حالت چطور است؟" }
+      ]
+    },
+
+    {
+      "id": "mem_l1_sentence_1",
+      "type": "memory",
+      "title": "حافظه جمله‌ها",
+      "pairs": [
+        { "en": "My name is Sara.", "fa": "اسم من سارا است." },
+        { "en": "I am a student.", "fa": "من دانش‌آموز هستم." },
+        { "en": "Hello! How are you?", "fa": "سلام! حالت چطور است؟" },
+        { "en": "I am fine, thanks.", "fa": "خوبم، ممنون." }
+      ]
+    },
+
+    {
+      "id": "scr_l1_dialogue_1",
+      "type": "scramble",
+      "title": "مرتب‌سازی مکالمه",
+      "items": [
+        { "word": "hellomynameisali", "hint": "سلام، اسم من علی است" },
+        { "word": "nicetomeetyou", "hint": "از دیدنت خوشحالم" },
+        { "word": "goodbye", "hint": "خداحافظ" }
+      ]
+    }
+  ]
+}

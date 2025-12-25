@@ -1,0 +1,29 @@
+/* css/audio-system.css - فایل می‌تواند خالی باشد یا این کدها: */
+.audio-player {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 15px 0;
+    color: white;
+}
+
+.audio-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.audio-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.audio-btn:hover {
+    background: rgba(255,255,255,0.3);
+    transform: scale(1.05);
+}

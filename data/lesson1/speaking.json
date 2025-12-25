@@ -1,0 +1,50 @@
+{
+  "title": "تمرینات تلفظ درس ۱",
+  "additionalTips": [
+    "برای تمرین بهتر، صدای خود را ضبط کنید",
+    "با native speakers مقایسه کنید",
+    "هر روز حداقل ۱۰ دقیقه تمرین کنید"
+  ],
+  "levels": {
+    "beginner": [
+      {
+        "id": "b1",
+        "type": "word",
+        "text": "Hello",
+        "phonetic": "/həˈloʊ/",
+        "translation": "سلام",
+        "difficulty": 1,
+        "note": "کلمه سلام و خوش‌آمدگویی"
+      },
+      {
+        "id": "b2",
+        "type": "word",
+        "text": "Teacher",
+        "phonetic": "/ˈtiːtʃər/",
+        "translation": "معلم",
+        "difficulty": 1
+      }
+    ],
+    "intermediate": [
+      {
+        "id": "i1",
+        "type": "sentence",
+        "text": "My name is Ali",
+        "phonetic": "/maɪ neɪm ɪz ˈɑːli/",
+        "translation": "اسم من علی است",
+        "difficulty": 2
+      }
+    ],
+    "advanced": [
+      {
+        "id": "a1",
+        "type": "tongue_twister",
+        "text": "She sells seashells by the seashore",
+        "phonetic": "/ʃiː sɛlz ˈsiːʃɛlz baɪ ðə ˈsiːʃɔːr/",
+        "translation": "او صدف‌ها را در ساحل می‌فروشد",
+        "difficulty": 5,
+        "hint": "روی صداهای 's' و 'sh' تمرکز کن"
+      }
+    ]
+  }
+}

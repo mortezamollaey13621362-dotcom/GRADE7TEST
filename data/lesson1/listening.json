@@ -1,0 +1,60 @@
+{
+  "tabs": [
+    {
+      "id": "tab1",
+      "title": "Lesson 1: Conversation",
+      "exercises": [
+        {
+          "id": "ex1",
+          "type": "comprehension",
+          "title": "Listen to the conversation between Ali and Reza",
+          "audio_text": "Hello Reza, how are you? I am fine Ali, thanks. Are you coming to school tomorrow? Yes, I have a math exam.",
+          "questions": [
+            {
+              "id": "q1",
+              "type": "mcq",
+              "text": "Who has a math exam?",
+              "options": [
+                { "text": "Ali", "isCorrect": false },
+                { "text": "Reza", "isCorrect": true }
+              ]
+            },
+            {
+              "id": "q2",
+              "type": "tf",
+              "text": "Reza is not going to school.",
+              "options": [
+                { "text": "True", "isCorrect": false },
+                { "text": "False", "isCorrect": true }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tab2",
+      "title": "Lesson 2: Vocabulary",
+      "exercises": [
+        {
+          "id": "ex2",
+          "type": "gap_fill",
+          "title": "Listen and complete the sentences",
+          "audio_text": "My father works in a library. He loves books.",
+          "questions": [
+            {
+              "id": "q3",
+              "type": "gap",
+              "text": "My father works in a ______.",
+              "options": [
+                { "text": "hospital", "isCorrect": false },
+                { "text": "library", "isCorrect": true },
+                { "text": "school", "isCorrect": false }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

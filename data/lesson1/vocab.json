@@ -1,0 +1,12 @@
+[
+  { "id": "wb_w_1_1", "word": "workbook", "phonetic": "/ˈwɝːk.bʊk/", "persian": "کتاب کار", "level": "A2" },
+  { "id": "wb_w_1_2", "word": "teacher", "phonetic": "/ˈtiːtʃər/", "persian": "معلم", "level": "A1" },
+  { "id": "wb_w_1_3", "word": "student", "phonetic": "/ˈstuːdnt/", "persian": "دانش‌آموز", "level": "A1" },
+  { "id": "wb_w_1_4", "word": "manager", "phonetic": "/ˈmænɪdʒər/", "persian": "مدیر", "level": "A1" },
+  { "id": "wb_w_1_5", "word": "classroom", "phonetic": "/ˈklæsruːm/", "persian": "کلاس درس", "level": "A1" },
+  { "id": "wb_w_1_6", "word": "homework", "phonetic": "/ˈhəʊmwɜːk/", "persian": "تکلیف خانه", "level": "A1" },
+  { "id": "wb_w_1_7", "word": "notebook", "phonetic": "/ˈnəʊtbʊk/", "persian": "دفتر", "level": "A1" },
+  { "id": "wb_w_1_8", "word": "pencil", "phonetic": "/ˈpensl/", "persian": "مداد", "level": "A1" },
+  { "id": "wb_w_1_9", "word": "dictionary", "phonetic": "/ˈdɪkʃənri/", "persian": "فرهنگ لغت", "level": "A2" },
+  { "id": "wb_w_1_10", "word": "exercise", "phonetic": "/ˈeksərsaɪz/", "persian": "تمرین", "level": "A2" }
+]

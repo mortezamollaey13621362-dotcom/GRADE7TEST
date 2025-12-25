@@ -1,0 +1,999 @@
+/* ===================================
+   VOCABULARY SECTION STYLES
+   =================================== */
+
+/* کانتینر اصلی بخش واژگان */
+.vocab-container {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    direction: rtl;
+    font-family: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
+}
+
+/* هدر بخش واژگان */
+.vocab-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 30px;
+    color: white;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+}
+
+.vocab-header h2 {
+    margin: 0 0 20px 0;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* آمار تسلط */
+.mastery-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 25px;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.3s ease, background 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.stat-card i {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    display: block;
+    margin: 10px 0;
+}
+
+.stat-label {
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+/* دکمه‌های عملیات */
+.vocab-actions {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-top: 25px;
+}
+
+.btn-action {
+    padding: 12px 24px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-action:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-action i {
+    font-size: 1.1rem;
+}
+
+/* فیلترها و جستجو */
+.vocab-filters {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.search-box {
+    flex: 1;
+    min-width: 250px;
+    position: relative;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 12px 45px 12px 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.search-box i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+}
+
+.filter-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 10px 20px;
+    background: #f5f5f5;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.filter-btn:hover {
+    background: #eeeeee;
+}
+
+.filter-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+/* گرید کارت‌های واژگان */
+.vocab-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+/* کارت واژه */
+.vocab-card {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid transparent;
+}
+
+.vocab-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.vocab-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.2);
+    border-color: #667eea;
+}
+
+.vocab-card:hover::before {
+    transform: scaleX(1);
+}
+
+/* نشان یاد گرفته شده */
+.learned-badge {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: linear-gradient(135deg, #4caf50, #45a049);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 3px 10px rgba(76, 175, 80, 0.3);
+}
+
+/* محتوای کارت */
+.card-header {
+    margin-bottom: 20px;
+}
+
+.word-main {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-play {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-play:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+.phonetic-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #7f8c8d;
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+}
+
+.phonetic-text {
+    font-family: 'Courier New', monospace;
+    font-weight: 500;
+}
+
+.btn-play-inline {
+    background: #f0f0f0;
+    border: none;
+    color: #667eea;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.btn-play-inline:hover {
+    background: #667eea;
+    color: white;
+}
+
+.meaning-persian {
+    font-size: 1.1rem;
+    color: #34495e;
+    font-weight: 500;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+/* بج‌ها */
+.badges-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.badge.level {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+}
+
+.badge.pos {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    color: white;
+}
+
+.badge.mastery {
+    color: white;
+}
+
+.badge.mastery.beginner {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.badge.mastery.intermediate {
+    background: linear-gradient(135deg, #f39c12, #d68910);
+}
+
+.badge.mastery.advanced {
+    background: linear-gradient(135deg, #27ae60, #229954);
+}
+
+.badge.mastery.expert {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+/* نوار پیشرفت */
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #ecf0f1;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 10px;
+    transition: width 0.6s ease;
+}
+
+/* اقدامات کارت */
+.card-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.btn-card {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    background: white;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-card:hover {
+    border-color: #667eea;
+    background: #f8f9ff;
+    color: #667eea;
+}
+
+/* مودال جزئیات کلمه */
+.word-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-content {
+    background: white;
+    border-radius: 25px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 25px 25px 0 0;
+    position: relative;
+}
+
+.close-modal {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.close-modal:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+.modal-body {
+    padding: 30px;
+}
+
+/* خانواده کلمه */
+.word-family {
+    background: #f8f9ff;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.word-family h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.family-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.family-item {
+    background: white;
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+    border: 2px solid #e0e0e0;
+}
+
+.family-type {
+    display: block;
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    margin-bottom: 5px;
+}
+
+.family-word {
+    display: block;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* لیست معانی */
+.meanings-list {
+    margin-bottom: 25px;
+}
+
+.meanings-list h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.meaning-item {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9ff;
+    border-radius: 12px;
+}
+
+.meaning-number {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.meaning-content {
+    flex: 1;
+}
+
+.meaning-text {
+    font-weight: 500;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+/* باکس مثال */
+.example-box {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    border-right: 4px solid #667eea;
+    position: relative;
+}
+
+.example-en {
+    font-style: italic;
+    color: #34495e;
+    margin-bottom: 8px;
+}
+
+.example-fa {
+    color: #7f8c8d;
+    font-size: 0.95rem;
+}
+
+.btn-play-example {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: #667eea;
+    border: none;
+    color: white;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.btn-play-example:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* نکات کاربرد */
+.usage-notes {
+    background: #fff9e6;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 25px;
+    border-right: 4px solid #f39c12;
+}
+
+.usage-notes h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.usage-notes ul {
+    list-style: none;
+    padding: 0;
+}
+
+.usage-notes li {
+    padding: 8px 0;
+    padding-right: 25px;
+    position: relative;
+}
+
+.usage-notes li::before {
+    content: '💡';
+    position: absolute;
+    right: 0;
+    top: 8px;
+}
+
+/* آمار مرور */
+.review-stats {
+    background: #f0f7ff;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.review-stats h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+}
+
+.stat-box {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    border: 2px solid #e0e0e0;
+}
+
+.stat-box i {
+    font-size: 1.8rem;
+    color: #667eea;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 5px 0;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.85rem;
+    color: #7f8c8d;
+}
+
+/* دایره پیشرفت */
+.progress-circle-container {
+    display: flex;
+    justify-content: center;
+    margin: 25px 0;
+    position: relative;
+}
+
+.progress-ring {
+    transform: rotate(-90deg);
+}
+
+.progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.progress-percentage {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.progress-label {
+    display: block;
+    font-size: 0.9rem;
+    color: #7f8c8d;
+}
+
+/* لیست مترادف و متضاد */
+.synonyms-antonyms {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.word-list-section {
+    background: #f8f9ff;
+    border-radius: 15px;
+    padding: 20px;
+}
+
+.word-list-section h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.word-list-section.synonyms h4 i {
+    color: #27ae60;
+}
+
+.word-list-section.antonyms h4 i {
+    color: #e74c3c;
+}
+
+.word-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.word-tag {
+    background: white;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: #2c3e50;
+    border: 2px solid #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+.word-tag:hover {
+    border-color: #667eea;
+    background: #f8f9ff;
+    color: #667eea;
+}
+
+/* ترکیبات رایج */
+.collocations {
+    background: #f8fff8;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 25px;
+    border-right: 4px solid #27ae60;
+}
+
+.collocations h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.collocation-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.collocation-tag {
+    background: white;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-weight: 500;
+    color: #27ae60;
+    border: 2px solid #d5f4e6;
+}
+
+/* اقدامات مودال */
+.modal-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    padding: 20px 30px 30px;
+    background: #f8f9ff;
+    border-radius: 0 0 25px 25px;
+}
+
+.btn-modal-action {
+    padding: 14px 24px;
+    border: 2px solid #e0e0e0;
+    background: white;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #2c3e50;
+}
+
+.btn-modal-action:hover {
+    border-color: #667eea;
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-modal-action.primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-color: transparent;
+    color: white;
+}
+
+.btn-modal-action.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* حالت بارگذاری */
+.loading-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* حالت خالی */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #7f8c8d;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.3;
+}
+
+.empty-state h3 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+/* رسپانسیو */
+@media (max-width: 768px) {
+    .vocab-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .mastery-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .vocab-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-box {
+        width: 100%;
+    }
+    
+    .vocab-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-content {
+        width: 95%;
+        max-height: 95vh;
+    }
+    
+    .modal-header,
+    .modal-body {
+        padding: 20px;
+    }
+    
+    .modal-actions {
+        grid-template-columns: 1fr;
+    }
+    
+    .synonyms-antonyms {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* انیمیشن‌های اضافی */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.vocab-card.new-word {
+    animation: pulse 2s ease-in-out 3;
+}
+
+/* اسکرول بار سفارشی */
+.modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 10px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #764ba2, #667eea);
+}
+
+/* دکمه‌های صدا با لهجه‌های مختلف */
+.pronunciation-options {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.btn-accent {
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+}
+
+.btn-accent:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn-accent.active {
+    background: rgba(255, 255, 255, 0.4);
+    border-color: rgba(255, 255, 255, 0.6);
+}

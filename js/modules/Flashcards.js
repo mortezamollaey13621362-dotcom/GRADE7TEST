@@ -89,12 +89,13 @@ export class Flashcards {
                                 <div class="card-content">
                                     <div class="card-main">
                                         ${backMeaning ? `<h3 class="card-meaning">${backMeaning}</h3>` : `<h3 class="card-meaning">—</h3>`}
-                                        ${backSimpleDefinition ? `<div class="card-definition">${backSimpleDefinition}</div>` : ''}
+                                        ${backSimpleDefinition ? `<div class="card-definition" style="direction: ltr; text-align: left;">${backSimpleDefinition}</div>` : ''}
 
                                         ${exSentence ? `
                                             <div class="card-example">
                                                 <h4><i class="fas fa-comment"></i> مثال:</h4>
-                                                <p class="example-sentence">${exSentence}</p>
+                                                <!-- تغییر مهم: اضافه کردن استایل direction: ltr به صورت مستقیم -->
+                                                <p class="example-sentence" style="direction: ltr; text-align: left; unicode-bidi: embed;">${exSentence}</p>
                                                 ${exTranslation ? `<p class="example-translation">${exTranslation}</p>` : ''}
                                             </div>
                                         ` : ''}
@@ -102,7 +103,8 @@ export class Flashcards {
                                         ${collocation ? `
                                             <div class="card-collocation">
                                                 <h4><i class="fas fa-link"></i> هم‌آیی:</h4>
-                                                <span class="collocation-text">${collocation}</span>
+                                                <!-- تغییر مهم: اصلاح جهت هم‌آیی‌ها -->
+                                                <span class="collocation-text" style="direction: ltr; display: inline-block;">${collocation}</span>
                                             </div>
                                         ` : ''}
 

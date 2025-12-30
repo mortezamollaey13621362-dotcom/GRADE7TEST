@@ -79,6 +79,7 @@ export class Grammar {
 
     initEventListeners() {
         // گوش دادن به کلیک‌ها در کل صفحه (Delegation)
+        // این روش بهینه‌تر از اضافه کردن لیسنر به تک‌تک عناصر است
         document.addEventListener('click', (e) => {
             // ۱. کلیک روی تب‌ها
             if (e.target.matches('.grammar-tab-btn')) {
@@ -93,7 +94,8 @@ export class Grammar {
 
             // ۳. دکمه بستن نهایی آزمون
             if (e.target.id === 'btnCloseFinal' || e.target.id === 'btnCloseQuiz') {
-                document.getElementById('grammarQuizModal').style.display = 'none';
+                const modal = document.getElementById('grammarQuizModal');
+                if (modal) modal.style.display = 'none';
             }
 
             // ۴. دکمه تکرار آزمون
@@ -112,7 +114,7 @@ export class Grammar {
         const contentContainer = document.getElementById('grammar-dynamic-content');
         if (contentContainer) {
             contentContainer.innerHTML = this.renderSections();
-            // تریگر کردن انیمیشن
+            // تریگر کردن انیمیشن (Reset Animation)
             contentContainer.classList.remove('fade-in');
             void contentContainer.offsetWidth; // Force reflow
             contentContainer.classList.add('fade-in');
@@ -160,7 +162,7 @@ export class Grammar {
                     <tr>
                         <td><b>${row.col1}</b></td>
                         <td><span class="badge-verb">${row.col2}</span></td>
-                        <td class="text-left">${row.col3}</td>
+                        <td class="text-left" style="direction: ltr;">${row.col3}</td>
                         <td class="text-muted">${row.col4}</td>
                     </tr>`).join('');
                 contentHTML += `
@@ -233,7 +235,7 @@ export class Grammar {
         this.currentQIndex = 0;
         this.score = 0;
         const modal = document.getElementById('grammarQuizModal');
-        if(modal) {
+        if (modal) {
             modal.style.display = 'flex';
             this.renderQuestion();
         }

@@ -1,5 +1,14 @@
 /* css/grammar.css */
 
+/* --- Variables --- */
+:root {
+    --grammar-primary: #6200ea;
+    --grammar-primary-light: #b388ff;
+    --grammar-bg-light: #f9f9f9;
+    --text-dark: #333;
+    --text-grey: #666;
+}
+
 /* --- 1. هدر و کانتینر اصلی --- */
 .section-header {
     text-align: center;
@@ -7,7 +16,7 @@
 }
 
 .text-gradient {
-    background: linear-gradient(45deg, #6200ea, #9d46ff);
+    background: linear-gradient(45deg, var(--grammar-primary), #9d46ff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 800;
@@ -33,6 +42,13 @@
     border-bottom: 2px solid #eee;
     padding-bottom: 5px;
     overflow-x: auto; /* اسکرول افقی در موبایل */
+    /* مخفی کردن اسکرول‌بار */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE and Edge */
+}
+
+.grammar-tabs-wrapper::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
 }
 
 .grammar-tab-btn {
@@ -54,7 +70,7 @@
 }
 
 .grammar-tab-btn.active {
-    color: #6200ea;
+    color: var(--grammar-primary);
 }
 
 /* خط متحرک زیر تب فعال */
@@ -65,7 +81,7 @@
     left: 0;
     width: 100%;
     height: 3px;
-    background: #6200ea;
+    background: var(--grammar-primary);
     border-radius: 5px 5px 0 0;
     animation: slideTab 0.3s ease-out;
 }
@@ -106,7 +122,7 @@
 }
 
 .grammar-card h4, .grammar-card h5 {
-    color: #333;
+    color: var(--text-dark);
     margin-bottom: 15px;
     font-weight: bold;
     border-bottom: 2px solid #f7f7f7;
@@ -118,19 +134,21 @@
     display: flex;
     align-items: flex-start;
     gap: 15px;
-    background: linear-gradient(to right, #ffffff, #f9fbfc);
-    border-left: 5px solid #6200ea;
+    background: linear-gradient(to left, #ffffff, #f9fbfc); /* گرادینت مطابق جهت فارسی */
+    border-right: 5px solid var(--grammar-primary); /* اصلاح: بوردر در سمت راست برای RTL */
+    border-left: none;
 }
 
 .grammar-icon {
     font-size: 2rem;
     background: #eee;
-    width: 50px;
+    min-width: 50px; /* اطمینان از سایز ثابت */
     height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
+    color: var(--grammar-primary);
 }
 
 /* استایل فرمول */
@@ -145,11 +163,14 @@
     text-align: center;
     font-size: 1.1rem;
     letter-spacing: 1px;
+    margin: 10px 0;
 }
 
 /* استایل جدول */
 .table-responsive {
     overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid #eee;
 }
 
 .grammar-table {
@@ -164,6 +185,7 @@
     text-align: center;
     font-size: 0.9rem;
     color: #555;
+    border-bottom: 2px solid #eee;
 }
 
 .grammar-table td {
@@ -171,6 +193,18 @@
     border-bottom: 1px solid #eee;
     text-align: center;
     vertical-align: middle;
+    /* پیش‌فرض ltr برای کلمات انگلیسی */
+    direction: ltr; 
+}
+
+/* 
+   این بخش جدید اضافه شده است:
+   هدف قرار دادن ستون چهارم (ترجمه) برای راست‌چین شدن 
+*/
+.grammar-table td:last-child {
+    direction: rtl !important; /* اجبار به راست‌چین */
+    text-align: right;        /* متن از سمت راست شروع شود */
+    font-family: inherit;     /* فونت فارسی */
 }
 
 .badge-verb {
@@ -180,6 +214,7 @@
     border-radius: 6px;
     font-weight: bold;
     font-family: sans-serif;
+    display: inline-block;
 }
 
 /* استایل هشدار (Warning) */
@@ -198,7 +233,7 @@
 .example-item {
     display: flex;
     flex-direction: column;
-    padding: 10px 0;
+    padding: 12px 0;
     border-bottom: 1px dashed #eee;
 }
 
@@ -212,11 +247,13 @@
     direction: ltr;
     text-align: left;
     margin-bottom: 4px;
+    font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
 }
 
 .fa-text {
     color: #666;
     font-size: 0.9rem;
+    text-align: right;
 }
 
 /* --- 4. دکمه شروع آزمون (پایین صفحه) --- */
@@ -228,7 +265,7 @@
 }
 
 .quiz-info-card {
-    background: #f9f9f9;
+    background: var(--grammar-bg-light);
     padding: 20px 30px;
     border-radius: 15px;
     text-align: center;
@@ -237,7 +274,7 @@
 }
 
 .btn-quiz-start {
-    background: linear-gradient(135deg, #6200ea, #7c4dff);
+    background: linear-gradient(135deg, var(--grammar-primary), #7c4dff);
     color: white;
     border: none;
     padding: 12px 30px;
@@ -319,21 +356,24 @@
     border-radius: 4px;
     margin-bottom: 25px;
     overflow: hidden;
+    direction: ltr; /* برای پر شدن از چپ به راست */
 }
 
 .progress-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #6200ea, #b388ff);
+    background: linear-gradient(90deg, var(--grammar-primary), var(--grammar-primary-light));
     transition: width 0.3s ease;
 }
 
 /* سوال */
 .quiz-question {
     font-size: 1.3rem;
-    color: #333;
+    color: var(--text-dark);
     margin-bottom: 30px;
-    direction: ltr; /* انگلیسی */
+    direction: ltr; /* سوالات گرامر انگلیسی هستند */
+    text-align: center;
     font-weight: 700;
+    font-family: 'Poppins', sans-serif;
 }
 
 /* گزینه‌ها */
@@ -351,12 +391,15 @@
     font-size: 1.1rem;
     cursor: pointer;
     transition: all 0.2s;
-    font-family: inherit;
+    font-family: 'Poppins', sans-serif; /* فونت انگلیسی برای گزینه‌ها */
     color: #444;
+    direction: ltr; /* گزینه‌ها چپ چین باشند */
+    text-align: left;
+    position: relative;
 }
 
 .quiz-option-btn:hover:not([disabled]) {
-    border-color: #6200ea;
+    border-color: var(--grammar-primary);
     background: #f4edff;
 }
 
@@ -381,11 +424,13 @@
 .result-icon {
     font-size: 4rem;
     margin-bottom: 10px;
+    animation: float 2s infinite ease-in-out;
 }
 
 .result-msg {
     color: #666;
     margin-bottom: 20px;
+    font-size: 1.1rem;
 }
 
 .quiz-actions {
@@ -395,12 +440,13 @@
 }
 
 .btn-quiz-restart {
-    background: #6200ea;
+    background: var(--grammar-primary);
     color: white;
     border: none;
     padding: 10px 20px;
     border-radius: 10px;
     cursor: pointer;
+    font-family: inherit;
 }
 
 .btn-quiz-close-final {
@@ -410,4 +456,12 @@
     padding: 10px 20px;
     border-radius: 10px;
     cursor: pointer;
+    font-family: inherit;
+}
+
+/* انیمیشن شناور */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
 }

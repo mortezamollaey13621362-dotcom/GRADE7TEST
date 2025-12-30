@@ -1,21 +1,57 @@
 // js/modules/Conversation.js
+// نسخه پیشرفته با سیستم صوتی هیبرید 6 لایه‌ای + لهجه‌های متنوع
 
 export class Conversation {
     constructor() {
-        this.lessonData = []; // آرایه‌ای از تمام مکالمات درس
-        this.activeIndex = 0; // ایندکس تب فعال
+        this.lessonData = []; 
+        this.activeIndex = 0; 
         this.activeRole = 'all'; 
         this.isPlaying = false;
         
-        // متغیرهای کنترل صدا
-        this.currentAudioElement = null; // برای صدای آنلاین
-        this.currentUtterance = null;    // برای صدای آفلاین
+        // 🎵 سیستم صوتی مستقل
+        this.currentAudio = null;
+        this.currentUtterance = null;
         this.speechSynthesis = window.speechSynthesis;
+        this.audioCache = new Map(); // کش فایل‌های محلی
+        this.currentLessonId = null;
+        
+        // 🎭 مدیریت صداهای مرورگر
+        this.availableVoices = [];
+        this.voicesLoaded = false;
+        this.loadVoices();
     }
 
-    // لود کردن داده‌ها از JSON
+    // ==========================================
+    // 🎤 بارگذاری صداهای موجود در مرورگر
+    // ==========================================
+    loadVoices() {
+        if (!this.speechSynthesis) return;
+
+        const loadVoicesList = () => {
+            this.availableVoices = this.speechSynthesis.getVoices();
+            this.voicesLoaded = this.availableVoices.length > 0;
+            
+            if (this.voicesLoaded) {
+                console.log(`✅ Loaded ${this.availableVoices.length} voices:`, 
+                    this.availableVoices.map(v => `${v.name} (${v.lang})`).join(', '));
+            }
+        };
+
+        loadVoicesList();
+        
+        // برخی مرورگرها صداها را به صورت async بارگذاری می‌کنند
+        if (this.speechSynthesis.onvoiceschanged !== undefined) {
+            this.speechSynthesis.onvoiceschanged = loadVoicesList;
+        }
+    }
+
+    // ==========================================
+    // 📊 بارگذاری داده‌ها
+    // ==========================================
     async loadData(lessonId) {
+        this.currentLessonId = lessonId;
         const url = `data/lesson${lessonId}/conversation.json`;
+        
         try {
             const response = await fetch(url);
             if (!response.ok) throw new Error(`Not found: ${url}`);
@@ -24,9 +60,10 @@ export class Conversation {
             
             if (this.lessonData.length > 0) {
                 this.activeIndex = 0;
+                await this.preloadAudioFiles(lessonId);
             }
         } catch (error) {
-            console.error("Error loading conversation data:", error);
+            console.error("❌ خطا در بارگذاری conversation:", error);
             document.getElementById('conversation-content').innerHTML = `
                 <div class="error-message">
                     خطا در بارگذاری مکالمه.<br> ${url}
@@ -34,7 +71,428 @@ export class Conversation {
         }
     }
 
-    // ساخت HTML (بدون تغییر نسبت به کد شما - حفظ ساختار UI)
+    // ==========================================
+    // 🎵 سیستم صوتی 6 لایه‌ای (بهبود یافته)
+    // ==========================================
+
+    /**
+     * پیش‌بارگذاری فایل‌های صوتی محلی
+     */
+    async preloadAudioFiles(lessonId) {
+        if (!this.lessonData || this.lessonData.length === 0) return;
+
+        const currentConv = this.lessonData[this.activeIndex];
+        const basePath = `data/lesson${lessonId}/audio/conversation`;
+
+        for (let i = 0; i < currentConv.lines.length; i++) {
+            const line = currentConv.lines[i];
+            const audioPath = `${basePath}/line${i + 1}.mp3`;
+            
+            try {
+                const response = await fetch(audioPath, { method: 'HEAD' });
+                if (response.ok) {
+                    this.audioCache.set(i, audioPath);
+                }
+            } catch (e) {
+                // فایل وجود ندارد، از لایه‌های دیگر استفاده می‌شود
+            }
+        }
+    }
+
+    /**
+     * پخش هوشمند با 6 لایه Fallback + لهجه‌های متنوع
+     * Layer 1: Local Audio Files (conversation/line1.mp3)
+     * Layer 2: Local TTS Cache (tts-cache/word.mp3)
+     * Layer 3: ResponsiveVoice API (High-Quality Online TTS)
+     * Layer 4: VoiceRSS API (Backup Online TTS)
+     * Layer 5: Browser SpeechSynthesis با انتخاب هوشمند صدا
+     * Layer 6: Silent Fallback with Visual Feedback
+     */
+    async playSmartAudio(text, lineIndex = null, speakerName = 'Default') {
+        return new Promise(async (resolve) => {
+            if (!text) { 
+                resolve(); 
+                return; 
+            }
+
+            // توقف صدای قبلی
+            this.stopAudioOnly();
+
+            // تأخیر کوتاه برای جلوگیری از تداخل
+            await new Promise(r => setTimeout(r, 50));
+
+            let played = false;
+
+            // ==========================================
+            // Layer 1: فایل محلی مکالمه (بالاترین کیفیت)
+            // ==========================================
+            if (lineIndex !== null && this.audioCache.has(lineIndex)) {
+                try {
+                    await this.playLocalFile(this.audioCache.get(lineIndex));
+                    played = true;
+                    resolve();
+                    return;
+                } catch (e) {
+                    console.warn('⚠️ Layer 1 failed (Local Conversation File):', e.message);
+                }
+            }
+
+            // ==========================================
+            // Layer 2: کش TTS محلی
+            // ==========================================
+            if (!played && this.currentLessonId) {
+                const cachePath = `data/lesson${this.currentLessonId}/audio/tts-cache/${this.sanitizeFilename(text)}.mp3`;
+                try {
+                    const response = await fetch(cachePath, { method: 'HEAD' });
+                    if (response.ok) {
+                        await this.playLocalFile(cachePath);
+                        played = true;
+                        resolve();
+                        return;
+                    }
+                } catch (e) {
+                    console.warn('⚠️ Layer 2 failed (TTS Cache)');
+                }
+            }
+
+            // ==========================================
+            // Layer 3: ResponsiveVoice (کیفیت بالا - رایگان تا 100 درخواست/روز)
+            // ==========================================
+            if (!played && navigator.onLine && typeof responsiveVoice !== 'undefined') {
+                try {
+                    await this.playResponsiveVoice(text, speakerName);
+                    played = true;
+                    resolve();
+                    return;
+                } catch (e) {
+                    console.warn('⚠️ Layer 3 failed (ResponsiveVoice):', e.message);
+                }
+            }
+
+            // ==========================================
+            // Layer 4: VoiceRSS API (Backup آنلاین)
+            // ==========================================
+            if (!played && navigator.onLine) {
+                try {
+                    await this.playVoiceRSS(text);
+                    played = true;
+                    resolve();
+                    return;
+                } catch (e) {
+                    console.warn('⚠️ Layer 4 failed (VoiceRSS):', e.message);
+                }
+            }
+
+            // ==========================================
+            // Layer 5: SpeechSynthesis مرورگر با انتخاب هوشمند صدا
+            // ==========================================
+            if (!played) {
+                try {
+                    await this.playBrowserTTS(text, speakerName);
+                    played = true;
+                    resolve();
+                    return;
+                } catch (e) {
+                    console.warn('⚠️ Layer 5 failed (Browser TTS):', e.message);
+                }
+            }
+
+            // ==========================================
+            // Layer 6: Fallback بصری (هیچ صدایی موجود نیست)
+            // ==========================================
+            if (!played) {
+                console.warn('🔇 All audio layers failed. Using visual feedback only.');
+                this.showVisualFeedback(text);
+                await new Promise(r => setTimeout(r, 2000));
+                resolve();
+            }
+        });
+    }
+
+    // ==========================================
+    // متدهای پخش برای هر لایه
+    // ==========================================
+
+    /**
+     * پخش فایل محلی
+     */
+    playLocalFile(path) {
+        return new Promise((resolve, reject) => {
+            const audio = new Audio(path);
+            this.currentAudio = audio;
+
+            audio.onended = () => {
+                this.currentAudio = null;
+                resolve();
+            };
+
+            audio.onerror = (e) => {
+                this.currentAudio = null;
+                reject(new Error('Failed to load local file'));
+            };
+
+            audio.play().catch(reject);
+        });
+    }
+
+    /**
+     * Layer 3: ResponsiveVoice (بهترین کیفیت آنلاین رایگان)
+     * استفاده: قبل از بارگذاری این فایل، در HTML اضافه کنید:
+     * <script src="https://code.responsivevoice.org/responsivevoice.js?key=YOUR_KEY"></script>
+     */
+    playResponsiveVoice(text, speakerName) {
+        return new Promise((resolve, reject) => {
+            if (typeof responsiveVoice === 'undefined') {
+                reject(new Error('ResponsiveVoice not loaded'));
+                return;
+            }
+
+            // انتخاب صدا بر اساس جنسیت
+            const isFemale = this.isFemaleCharacter(speakerName);
+            const voiceName = isFemale ? 'US English Female' : 'US English Male';
+
+            responsiveVoice.speak(text, voiceName, {
+                pitch: 1,
+                rate: 0.9,
+                volume: 1,
+                onend: () => resolve(),
+                onerror: (err) => reject(new Error('ResponsiveVoice error'))
+            });
+        });
+    }
+
+    /**
+     * Layer 4: VoiceRSS (نیاز به API Key رایگان)
+     * دریافت API Key: https://voicerss.org/personel (رایگان تا 350 درخواست/روز)
+     */
+    playVoiceRSS(text) {
+        return new Promise((resolve, reject) => {
+            // 🔑 API Key رایگان خود را از voicerss.org دریافت کنید
+            const apiKey = 'YOUR_VOICERSS_API_KEY'; // ⚠️ جایگزین کنید
+            
+            if (apiKey === 'YOUR_VOICERSS_API_KEY') {
+                reject(new Error('VoiceRSS API key not configured'));
+                return;
+            }
+
+            // پارامترهای بهینه برای کیفیت بالا
+            const params = new URLSearchParams({
+                key: apiKey,
+                src: text,
+                hl: 'en-us',
+                v: 'Mary', // یا 'John' برای مرد
+                r: '0', // سرعت عادی
+                c: 'MP3',
+                f: '44khz_16bit_stereo' // بالاترین کیفیت
+            });
+
+            const url = `https://api.voicerss.org/?${params}`;
+            const audio = new Audio(url);
+            this.currentAudio = audio;
+
+            audio.onended = () => {
+                this.currentAudio = null;
+                resolve();
+            };
+
+            audio.onerror = () => {
+                this.currentAudio = null;
+                reject(new Error('VoiceRSS failed'));
+            };
+
+            audio.play().catch(reject);
+        });
+    }
+
+    /**
+     * Layer 5: Browser TTS با انتخاب هوشمند صدا (بهبود یافته)
+     */
+    playBrowserTTS(text, speakerName) {
+        return new Promise((resolve) => {
+            if (!this.speechSynthesis) {
+                resolve();
+                return;
+            }
+
+            // اطمینان از بارگذاری صداها
+            if (!this.voicesLoaded) {
+                this.availableVoices = this.speechSynthesis.getVoices();
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+
+            // ✨ انتخاب هوشمند صدا بر اساس جنسیت و کیفیت
+            const selectedVoice = this.selectBestVoice(speakerName);
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+                console.log(`🎤 Using voice: ${selectedVoice.name} (${selectedVoice.lang})`);
+            }
+
+            utterance.onend = () => {
+                this.currentUtterance = null;
+                resolve();
+            };
+
+            utterance.onerror = () => {
+                this.currentUtterance = null;
+                resolve();
+            };
+
+            this.currentUtterance = utterance;
+            this.speechSynthesis.speak(utterance);
+        });
+    }
+
+    /**
+     * 🎭 انتخاب بهترین صدا بر اساس جنسیت و لهجه
+     */
+    selectBestVoice(speakerName) {
+        if (this.availableVoices.length === 0) return null;
+
+        const isFemale = this.isFemaleCharacter(speakerName);
+        
+        // لیست اولویت‌دار صداهای باکیفیت
+        const priorityVoices = {
+            female: [
+                // Apple/iOS voices (بهترین کیفیت)
+                'Samantha', 'Victoria', 'Karen', 'Moira',
+                // Google voices
+                'Google US English Female', 'Google UK English Female',
+                // Microsoft voices
+                'Microsoft Zira', 'Microsoft Hazel',
+                // عمومی
+                'female', 'woman'
+            ],
+            male: [
+                'Alex', 'Daniel', 'Tom', 'Aaron',
+                'Google US English Male', 'Google UK English Male',
+                'Microsoft David', 'Microsoft Mark',
+                'male', 'man'
+            ]
+        };
+
+        const preferredList = isFemale ? priorityVoices.female : priorityVoices.male;
+
+        // جستجوی دقیق
+        for (const name of preferredList) {
+            const voice = this.availableVoices.find(v => 
+                v.name.toLowerCase().includes(name.toLowerCase()) &&
+                v.lang.startsWith('en')
+            );
+            if (voice) return voice;
+        }
+
+        // Fallback: هر صدای انگلیسی
+        return this.availableVoices.find(v => v.lang.startsWith('en-US')) ||
+               this.availableVoices.find(v => v.lang.startsWith('en')) ||
+               this.availableVoices[0];
+    }
+
+    /**
+     * تشخیص جنسیت شخصیت بر اساس نام
+     */
+    isFemaleCharacter(name) {
+        const femaleNames = [
+            'Sarah', 'Mary', 'Jane', 'Alice', 'Emily', 'Emma', 'Sophia', 
+            'Isabella', 'Olivia', 'Ava', 'Mia', 'Charlotte', 'Lisa',
+            'Jennifer', 'Linda', 'Susan', 'Jessica', 'Ashley', 'Anna'
+        ];
+        return femaleNames.some(fn => name.includes(fn));
+    }
+
+    /**
+     * Layer 6: نمایش بصری بدون صدا
+     */
+    showVisualFeedback(text) {
+        const indicator = document.querySelector('.conv-line.active .play-indicator');
+        if (indicator) {
+            indicator.innerHTML = '<i class="fas fa-volume-mute"></i>';
+            indicator.style.color = '#ff6b6b';
+        }
+        console.log(`📢 Visual Only: "${text}"`);
+    }
+
+    /**
+     * ابزار کمکی: ساخت نام فایل امن
+     */
+    sanitizeFilename(text) {
+        return text
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, '-')
+            .replace(/-+/g, '-')
+            .substring(0, 50);
+    }
+
+    /**
+     * توقف تمام صداها
+     */
+    stopAudioOnly() {
+        if (this.currentAudio) {
+            this.currentAudio.pause();
+            this.currentAudio.currentTime = 0;
+            this.currentAudio.src = '';
+            this.currentAudio = null;
+        }
+        if (this.speechSynthesis) {
+            this.speechSynthesis.cancel();
+        }
+        if (typeof responsiveVoice !== 'undefined') {
+            responsiveVoice.cancel();
+        }
+        this.currentUtterance = null;
+    }
+
+    // ==========================================
+    // 🔄 پخش توالی مکالمه
+    // ==========================================
+    async playAllLines() {
+        this.isPlaying = true;
+        this.updatePlayButton(true);
+
+        const lines = this.lessonData[this.activeIndex].lines;
+        const participants = this.lessonData[this.activeIndex].participants;
+        let index = 0;
+
+        while (this.isPlaying && index < lines.length) {
+            const lineData = lines[index];
+            const speakerInfo = participants.find(p => p.id === lineData.speakerId);
+            const speakerName = speakerInfo ? speakerInfo.name : 'Unknown';
+
+            this.highlightLine(index, lineData.speakerId);
+
+            const isUserTurn = (this.activeRole === lineData.speakerId);
+
+            if (isUserTurn) {
+                // نوبت کاربر: سکوت برای تمرین
+                await new Promise(resolve => setTimeout(resolve, 4000));
+            } else {
+                // نوبت سیستم: پخش هوشمند
+                try {
+                    if (this.isPlaying) {
+                        await this.playSmartAudio(lineData.textEn, index, speakerName);
+                    }
+                } catch (e) {
+                    console.log("⏸️ Playback interrupted");
+                }
+                
+                if (this.isPlaying) {
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                }
+            }
+
+            index++;
+        }
+
+        this.stopPlayback();
+    }
+
+    // ==========================================
+    // 🎨 رابط کاربری (بدون تغییر)
+    // ==========================================
     getHtml() {
         if (!this.lessonData || this.lessonData.length === 0) {
             return `<div class="error-state"><p>در حال بارگذاری مکالمه...</p></div>`;
@@ -47,7 +505,7 @@ export class Conversation {
         return `
             <div class="conversation-section" id="conv-section">
                 
-                <!-- *** بخش تب‌ها *** -->
+                <!-- تب‌ها -->
                 <div class="conv-tabs">
                     ${this.lessonData.map((conv, index) => `
                         <button class="conv-tab-btn ${index === this.activeIndex ? 'active' : ''}" data-index="${index}">
@@ -56,7 +514,7 @@ export class Conversation {
                     `).join('')}
                 </div>
 
-                <!-- صحنه نمایش -->
+                <!-- صحنه -->
                 <div class="conv-stage">
                     <div class="stage-actor left-actor" id="actor-${leftActor?.id}">
                         <img src="${leftActor?.avatar || 'images/avatar-placeholder.png'}" alt="${leftActor?.name}">
@@ -71,7 +529,7 @@ export class Conversation {
                     <h2>${currentData.title}</h2>
                 </div>
 
-                <!-- کنترل پنل -->
+                <!-- کنترل‌ها -->
                 <div class="conv-controls">
                     <button class="btn-conv-control" id="btn-play-conversation">
                         <i class="fas fa-play"></i> <span>پخش مکالمه</span>
@@ -110,7 +568,7 @@ export class Conversation {
                     }).join('')}
                 </div>
 
-                <!-- بخش کلمات و نکات -->
+                <!-- کلمات و نکات -->
                 <div class="conv-extras">
                     ${currentData.keywords ? `
                     <div class="section-label"><i class="fas fa-spell-check"></i> کلمات کلیدی</div>
@@ -139,17 +597,21 @@ export class Conversation {
         `;
     }
 
+    // ==========================================
+    // 🎮 مدیریت رویدادها
+    // ==========================================
     bindEvents() {
         if (!this.lessonData || this.lessonData.length === 0) return;
 
-        // سوئیچ بین تب‌ها
+        // تب‌ها
         const tabBtns = document.querySelectorAll('.conv-tab-btn');
         tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', async () => {
                 const newIndex = parseInt(btn.dataset.index);
                 if (newIndex !== this.activeIndex) {
                     this.stopPlayback();
                     this.activeIndex = newIndex;
+                    await this.preloadAudioFiles(this.currentLessonId);
                     const container = document.getElementById('conv-section').parentElement;
                     container.innerHTML = this.getHtml();
                     this.bindEvents();
@@ -179,182 +641,33 @@ export class Conversation {
             });
         });
 
-        // پخش تکی خطوط (اصلاح شده برای استفاده از سیستم جدید)
+        // پخش تکی
         document.querySelectorAll('.line-content').forEach(line => {
             line.addEventListener('click', (e) => {
-                if(e.target.classList.contains('persian-text')) {
+                if (e.target.classList.contains('persian-text')) {
                     e.target.classList.toggle('blurred');
                     return;
                 }
-                const index = line.dataset.index;
+                
+                const index = parseInt(line.dataset.index);
                 const text = line.dataset.text;
-                // پیدا کردن نام گوینده برای انتخاب صدای بهتر
                 const speakerId = line.closest('.conv-line').dataset.speaker;
                 const speakerName = line.querySelector('.speaker-name').innerText;
                 
-                this.stopPlayback(); 
+                this.stopPlayback();
                 this.highlightLine(index, speakerId);
-                
-                // فراخوانی سیستم هیبرید
-                this.playSmartAudio(text, speakerName); 
+                this.playSmartAudio(text, index, speakerName);
             });
         });
     }
 
-    // --- منطق پخش توالی (Smart Loop) ---
-    async playAllLines() {
-        this.isPlaying = true;
-        this.updatePlayButton(true);
-
-        const lines = this.lessonData[this.activeIndex].lines;
-        const participants = this.lessonData[this.activeIndex].participants;
-        let index = 0;
-
-        while (this.isPlaying && index < lines.length) {
-            const lineData = lines[index];
-            
-            // پیدا کردن اطلاعات گوینده
-            const speakerInfo = participants.find(p => p.id === lineData.speakerId);
-            const speakerName = speakerInfo ? speakerInfo.name : 'Unknown';
-
-            this.highlightLine(index, lineData.speakerId);
-
-            const isUserTurn = (this.activeRole === lineData.speakerId);
-
-            if (isUserTurn) {
-                // نوبت کاربر: سکوت ۴ ثانیه‌ای برای تمرین
-                await new Promise(resolve => setTimeout(resolve, 4000));
-            } else {
-                // نوبت سیستم: پخش هوشمند
-                // اگر کاربر وسط پخش دکمه توقف را زد، خطا ندهد
-                try {
-                    if (this.isPlaying) {
-                        await this.playSmartAudio(lineData.textEn, speakerName);
-                    }
-                } catch (e) {
-                    console.log("Playback interrupted");
-                }
-                
-                // مکث کوتاه بین جملات
-                if(this.isPlaying) await new Promise(resolve => setTimeout(resolve, 800));
-            }
-
-            index++;
-        }
-
-        this.stopPlayback();
-    }
-
     // ==========================================
-    // 🎵 سیستم صوتی هیبرید (آنلاین + آفلاین) 🎵
+    // 🛠️ ابزارهای کمکی
     // ==========================================
-
-    playSmartAudio(text, speakerName = 'Default') {
-        return new Promise((resolve, reject) => {
-            if (!text) { resolve(); return; }
-            
-            // کنسل کردن صداهای قبلی
-            this.stopAudioOnly();
-
-            // 1. تلاش برای پخش آنلاین (اگر اینترنت وصل است)
-            if (navigator.onLine) {
-                const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=${encodeURIComponent(text)}`;
-                
-                const audio = new Audio(url);
-                this.currentAudioElement = audio; 
-
-                // وقتی پخش با موفقیت تمام شد
-                audio.onended = () => {
-                    this.currentAudioElement = null;
-                    resolve();
-                };
-                
-                // اگر خطایی رخ داد (فیلتر، قطع نت، فرمت نامعتبر) -> برو به آفلاین
-                audio.onerror = (e) => {
-                    console.warn("Online TTS failed, switching to Offline TTS...");
-                    this.playOfflineTTS(text, speakerName).then(resolve);
-                };
-
-                // تلاش برای پخش
-                audio.play().catch(err => {
-                    // برخی مرورگرها پخش اتوماتیک را بلاک می‌کنند یا نت قطع شده
-                    console.warn("Audio play blocked/failed, switching to Offline TTS...");
-                    this.playOfflineTTS(text, speakerName).then(resolve);
-                });
-
-            } else {
-                // 2. اگر کلا آفلاین هستیم
-                this.playOfflineTTS(text, speakerName).then(resolve);
-            }
-        });
-    }
-
-    playOfflineTTS(text, speakerName) {
-        return new Promise((resolve) => {
-            if (!this.speechSynthesis) {
-                console.error("Browser does not support TTS");
-                resolve();
-                return;
-            }
-
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-US';
-            utterance.rate = 0.9; // کمی شمرده‌تر
-
-            // تلاش برای انتخاب صدای متناسب (زن/مرد)
-            const voices = this.speechSynthesis.getVoices();
-            let selectedVoice = null;
-
-            // منطق ساده تشخیص جنسیت از روی اسم (می‌توانید دقیق‌تر کنید)
-            const isFemale = ['Sarah', 'Mary', 'Jane', 'Alice', 'Emily'].includes(speakerName);
-            const isMale = ['John', 'David', 'Mike', 'Tom', 'Jack'].includes(speakerName);
-
-            if (isFemale) {
-                // دنبال صدای زن بگرد
-                selectedVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Female') || v.name.includes('Samantha'));
-            } else if (isMale) {
-                // دنبال صدای مرد بگرد
-                selectedVoice = voices.find(v => v.name.includes('Google UK English Male') || v.name.includes('Male') || v.name.includes('Daniel'));
-            }
-
-            // اگر صدای خاص پیدا نشد، اولی را بردار
-            if (!selectedVoice && voices.length > 0) selectedVoice = voices[0];
-            if (selectedVoice) utterance.voice = selectedVoice;
-
-            // هندل کردن پایان پخش
-            utterance.onend = () => {
-                this.currentUtterance = null;
-                resolve();
-            };
-
-            // هندل کردن خطا
-            utterance.onerror = () => {
-                this.currentUtterance = null;
-                resolve(); // حتی اگر خطا داد، پروسه را قفل نکن
-            };
-
-            this.currentUtterance = utterance;
-            this.speechSynthesis.speak(utterance);
-        });
-    }
-
-    stopAudioOnly() {
-        if (this.currentAudioElement) {
-            this.currentAudioElement.pause();
-            this.currentAudioElement = null;
-        }
-        if (this.speechSynthesis) {
-            this.speechSynthesis.cancel();
-        }
-    }
-
-    // ==========================================
-
-    // --- ابزارهای کمکی ---
     highlightLine(index, speakerId) {
         document.querySelectorAll('.conv-line').forEach(l => l.classList.remove('active'));
         const domLine = document.getElementById(`line-${index}`);
-        if(domLine) {
+        if (domLine) {
             domLine.classList.add('active');
             domLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }

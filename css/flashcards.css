@@ -1,4 +1,4 @@
-/* css/flashcards.css - نسخه مدرن و حرفه‌ای (Beautified) */
+/* css/flashcards.css - نسخه مدرن و حرفه‌ای (Beautified & Fixed) */
 
 /* =========================================
    1. Flashcard Container & 3D Logic
@@ -9,7 +9,9 @@
     margin-bottom: 40px;
     height: 420px; /* کمی ارتفاع بیشتر برای تنفس محتوا */
     cursor: pointer;
-    direction: ltr;
+    
+    /* جهت پیش‌فرض کانتینر چپ‌چین باشد تا ساختار کلی بهم نریزد */
+    direction: ltr; 
     position: relative;
     z-index: 10;
 }
@@ -71,6 +73,10 @@
     align-items: center;
     text-align: center;
     text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    
+    /* --- اصلاح حیاتی برای متن انگلیسی --- */
+    direction: ltr !important;
+    unicode-bidi: embed;
 }
 
 /* طرح پس‌زمینه محو برای زیبایی */
@@ -92,7 +98,9 @@
     background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); /* صورتی غروب ملایم */
     color: #444; /* متن تیره برای خوانایی بهتر روی صورتی روشن */
     justify-content: space-between;
-    direction: rtl; 
+    
+    /* تنظیمات زبان فارسی */
+    direction: rtl !important; 
     text-align: right;
 }
 
@@ -111,6 +119,7 @@
     text-align: center;
     position: relative;
     z-index: 20;
+    width: 100%; /* اطمینان از وسط‌چین بودن در فلکس */
 }
 
 .audio-btn {
@@ -124,11 +133,16 @@
     cursor: pointer;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 12px;
     font-size: 1.1rem;
     font-weight: 600;
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    
+    /* جهت دکمه صوتی همیشه چپ‌چین باشد تا آیکون و متن جابجا نشوند */
+    direction: ltr; 
+    font-family: inherit;
 }
 
 .audio-btn:hover {
@@ -167,6 +181,9 @@
     position: relative;
     z-index: 20;
     transition: transform 0.3s ease;
+    
+    /* کنترلرها چپ‌چین باشند */
+    direction: ltr; 
 }
 
 .flashcards-controls:hover {
@@ -195,6 +212,7 @@
     min-width: 140px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    font-family: inherit;
 }
 
 /* دکمه قبلی (طوسی/زرد ملایم) */
@@ -268,6 +286,7 @@
     display: flex;
     flex-direction: column;
     line-height: 1.2;
+    direction: ltr; /* اعداد شمارنده */
 }
 
 .card-counter span:first-child {
@@ -304,6 +323,7 @@
     font-size: 0.9rem;
     font-weight: 500;
     transition: all 0.3s ease;
+    direction: ltr; /* دکمه‌های تنظیمات */
 }
 
 .extra-btn:hover {

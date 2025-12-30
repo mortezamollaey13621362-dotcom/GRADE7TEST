@@ -7,8 +7,8 @@
         {
           "id": "ex1",
           "type": "comprehension",
-          "title": "Listen to the conversation between Ali and Reza",
-          "audio_text": "Hello Reza, how are you? I am fine Ali, thanks. Are you coming to school tomorrow? Yes, I have a math exam.",
+          "title": "Listen to the conversation between Ali and Reza.",
+          "audio_text": "Hello, Reza. How are you? I am fine, Ali, thanks. Are you coming to school tomorrow? Yes, I have a math exam.",
           "questions": [
             {
               "id": "q1",
@@ -39,7 +39,7 @@
         {
           "id": "ex2",
           "type": "gap_fill",
-          "title": "Listen and complete the sentences",
+          "title": "Listen and complete the sentences.",
           "audio_text": "My father works in a library. He loves books.",
           "questions": [
             {

@@ -14,11 +14,45 @@ export class Vocabulary {
     init(lessonData) {
         if (lessonData && lessonData.vocabulary) {
             this.words = lessonData.vocabulary;
-            console.log(`✅ Vocabulary loaded via init: ${this.words.length} words`);
+            console.log(`✅ Vocabulary loaded via init: ${this.words.length} words.`);
         } else {
             // اگر داده‌ای نبود، آرایه خالی می‌گذاریم تا بعداً در render پر شود
             this.words = [];
         }
+    }
+
+    /**
+     * بررسی و اصلاح فرمت متن انگلیسی (افزودن نقطه/علامت سوال اگر نیاز باشد)
+     * @param {string} text - متن انگلیسی ورودی
+     * @returns {string} - متن اصلاح شده با فرمت صحیح
+     */
+    _formatEnglishText(text) {
+        if (!text || typeof text !== 'string') return text;
+        
+        // حذف فاصله‌های اضافی از ابتدا و انتها
+        let formatted = text.trim();
+        
+        // اگر متن خالی است یا فقط فضای خالی است
+        if (!formatted) return formatted;
+        
+        // بررسی آیا متن با علامت نگارشی پایان یافته است
+        const lastChar = formatted.charAt(formatted.length - 1);
+        const isPunctuation = /[.!?,;:]$/.test(lastChar);
+        
+        // اگر علامت نگارشی ندارد
+        if (!isPunctuation) {
+            // اگر سوالی است (با کلمات سوالی شروع شده)
+            const isQuestion = /^(what|who|where|when|why|how|do|does|did|are|is|am|can|could|will|would|should|may|might)/i.test(formatted);
+            if (isQuestion) {
+                formatted += '?';
+            } 
+            // اگر جمله خبری است (با حرف بزرگ شروع شده و طول مناسب دارد)
+            else if (/^[A-Z]/.test(formatted) && formatted.length > 3) {
+                formatted += '.';
+            }
+        }
+        
+        return formatted;
     }
 
     // بارگذاری همه کلمات از فایل مرکزی
@@ -45,7 +79,7 @@ export class Vocabulary {
                 
                 const data = await response.json();
                 this.allWordDetails = data.words || {};
-                console.log(`✅ ${Object.keys(this.allWordDetails).length} کلمه بارگذاری شد`);
+                console.log(`✅ ${Object.keys(this.allWordDetails).length} کلمه بارگذاری شد.`);
                 return this.allWordDetails;
                 
             } catch (error) {
@@ -73,7 +107,7 @@ export class Vocabulary {
             const details = allWords[wordId];
             
             if (!details) {
-                console.warn(`⚠️ کلمه ${wordId} یافت نشد`);
+                console.warn(`⚠️ کلمه ${wordId} یافت نشد.`);
                 return this.createDefaultWordDetails(wordId);
             }
             
@@ -107,9 +141,9 @@ export class Vocabulary {
             },
             meanings: [{
                 definition: {
-                    simple: 'Word definition not available'
+                    simple: 'Word definition not available.'
                 },
-                persianDefinition: 'تعریف در دسترس نیست',
+                persianDefinition: 'تعریف در دسترس نیست.',
                 example: {
                     sentence: 'This is an example sentence.',
                     translation: 'این یک جمله مثال است.'
@@ -124,7 +158,7 @@ export class Vocabulary {
         try {
             // بارگذاری کلمات درس جاری
             const lesson = this.lessonManager.getCurrentLesson();
-            if (!lesson) return '<div>درس انتخاب نشده</div>';
+            if (!lesson) return '<div>درس انتخاب نشده.</div>';
             
             // تغییر کوچک: اگر words قبلاً توسط init پر شده بود، دوباره دانلود نکن
             if (!this.words || this.words.length === 0) {
@@ -133,7 +167,7 @@ export class Vocabulary {
             }
             
             if (!this.words || this.words.length === 0) {
-                return '<div>کلمه‌ای یافت نشد</div>';
+                return '<div>کلمه‌ای یافت نشد.</div>';
             }
             
             // شروع بارگذاری پیش‌گیرانه همه کلمات (در پس‌زمینه)
@@ -198,7 +232,7 @@ export class Vocabulary {
             
         } catch (error) {
             console.error('خطا در بارگذاری واژگان:', error);
-            return '<div class="error">خطا در بارگذاری کلمات</div>';
+            return '<div class="error">خطا در بارگذاری کلمات.</div>';
         }
     }
 
@@ -220,11 +254,25 @@ export class Vocabulary {
             
         } catch (error) {
             console.error('خطا در نمایش جزییات:', error);
-            this.showErrorModal('خطا در بارگذاری جزییات کلمه');
+            this.showErrorModal('خطا در بارگذاری جزییات کلمه.');
         }
     }
 
     createModalHTML(details) {
+        // فرمت کردن جملات انگلیسی در مثال‌ها
+        const formattedExamples = details.meanings?.map(meaning => {
+            if (meaning.example?.sentence) {
+                return {
+                    ...meaning,
+                    example: {
+                        ...meaning.example,
+                        sentence: this._formatEnglishText(meaning.example.sentence)
+                    }
+                };
+            }
+            return meaning;
+        }) || details.meanings || [];
+
         return `
             <div class="modal-content glass-effect">
                 <div class="modal-header">
@@ -264,11 +312,11 @@ export class Vocabulary {
                     </div>
                     
                     <div class="word-details">
-                        ${details.meanings && details.meanings.length > 0 ? details.meanings.map((meaning, index) => `
+                        ${formattedExamples.length > 0 ? formattedExamples.map((meaning, index) => `
                             <div class="meaning-section">
-                                <h4><i class="fas fa-book-open"></i> معنی ${details.meanings.length > 1 ? index + 1 : ''}</h4>
+                                <h4><i class="fas fa-book-open"></i> معنی ${formattedExamples.length > 1 ? index + 1 : ''}</h4>
                                 <p class="persian-definition">${meaning.persianDefinition || '—'}</p>
-                                ${meaning.definition?.simple ? `<p class="english-definition">${meaning.definition.simple}</p>` : ''}
+                                ${meaning.definition?.simple ? `<p class="english-definition">${this._formatEnglishText(meaning.definition.simple)}</p>` : ''}
                                 
                                 ${meaning.example?.sentence ? `
                                     <div class="example-section">
@@ -409,7 +457,7 @@ export class Vocabulary {
     }
 
     playWordAudio(word, accent = 'us', speed = 'normal') {
-        console.log(`پخش کلمه: ${word} (${accent}, ${speed})`);
+        console.log(`پخش کلمه: ${word} (${accent}, ${speed}).`);
         
         if (window.app && window.app.audioManager) {
             window.app.audioManager.playWord(word, accent);
@@ -427,7 +475,7 @@ export class Vocabulary {
     }
 
     playSentenceAudio(sentence, accent = 'us', speed = 'normal') {
-        console.log(`پخش جمله: ${sentence} (${accent}, ${speed})`);
+        console.log(`پخش جمله: ${sentence} (${accent}, ${speed}).`);
         
         if ('speechSynthesis' in window) {
             speechSynthesis.cancel();
@@ -483,7 +531,7 @@ export class Vocabulary {
     }
 
     startPractice() {
-        console.log('🎯 تمرین واژگان شروع شد');
+        console.log('🎯 تمرین واژگان شروع شد.');
         // بعداً کامل می‌کنیم
     }
 
@@ -499,7 +547,7 @@ export class Vocabulary {
                     </button>
                 </div>
                 <div class="modal-body">
-                    <p>لطفاً دوباره تلاش کنید</p>
+                    <p>لطفاً دوباره تلاش کنید.</p>
                 </div>
                 <div class="modal-footer">
                     <button class="btn-gradient close-btn">
@@ -529,6 +577,6 @@ export class Vocabulary {
     clearCache() {
         this.allWordDetails = null;
         this.loadingPromise = null;
-        console.log('🧹 کش کلمات پاک شد');
+        console.log('🧹 کش کلمات پاک شد.');
     }
 }

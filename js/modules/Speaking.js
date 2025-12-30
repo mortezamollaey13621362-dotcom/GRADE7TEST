@@ -1,1393 +1,1299 @@
 // js/modules/Speaking.js
+// 🎤 آزمایشگاه تلفظ پیشرفته (پایه هفتم تا دوازدهم)
+// نسخه نهایی: سیستم صوتی 6 لایه‌ای + ضبط هوشمند + UI بهینه
 
 export class Speaking {
     constructor(app) {
-        console.log("🗣️ Speaking Module Created");
         this.app = app;
         this.container = null;
-        this.mediaRecorder = null;
-        this.stream = null;
+        
+        // --- 🎤 Audio Recording & Visualizer ---
+        this.audioContext = null;
+        this.analyser = null;
+        this.dataArray = null;
+        this.animationId = null;
+        this.mediaStream = null;
+        this.recognition = null;
+        this.finalTranscript = '';
         this.isRecording = false;
-        this.audioChunks = [];
-        this.hasRecordedAudio = false; // بررسی اینکه کاربر واقعاً ضبط کرده یا نه
+
+        // --- 🎵 Smart Audio System (6 Layers) ---
+        this.currentAudio = null;
         this.currentUtterance = null;
+        this.speechSynthesis = window.speechSynthesis;
+        this.audioCache = new Map();
+        this.availableVoices = [];
+        this.voicesLoaded = false;
         
-        // سیستم صوتی چند لایه
-        this.audioService = {
-            isPlaying: false,
-            currentSource: null,
-            audioElement: null,
-            sources: [
-                {
-                    name: 'web-speech',
-                    type: 'speech',
-                    priority: 1,
-                    available: () => 'speechSynthesis' in window
-                },
-                {
-                    name: 'google-tts',
-                    type: 'api',
-                    priority: 2,
-                    available: () => navigator.onLine,
-                    getUrl: (text) => this.getGoogleTTSUrl(text)
-                }
-            ]
-        };
-        
-        this.state = {
-            currentLevel: 'beginner',
-            score: 0,
-            streak: 0,
-            exercisesCompleted: 0,
-            currentExercise: null
-        };
-        
-        // داده‌ها از speaking.json بارگذاری می‌شوند
+        // --- 📊 Data State ---
         this.exercises = {};
+        this.currentLevel = 'beginner';
+        this.currentExercise = null;
+        this.speakingData = null;
+        this.lessonId = null;
+
+        // --- 📈 Progress Tracking ---
+        this.completedExercises = new Set();
+        this.totalScore = 0;
+        this.attemptCount = 0;
+
+        // --- 🛡️ Browser Capabilities ---
+        this.capabilities = {
+            speechRecognition: false,
+            getUserMedia: false,
+            speechSynthesis: false,
+            audioContext: false
+        };
+
+        // بارگذاری اولیه صداهای مرورگر
+        this.loadVoices();
+        console.log("🎤 Speaking Module Initialized");
+    }
+
+    // ==========================================
+    // 🎤 بارگذاری لیست صداهای مرورگر
+    // ==========================================
+    loadVoices() {
+        if (!this.speechSynthesis) return;
+
+        const loadVoicesList = () => {
+            this.availableVoices = this.speechSynthesis.getVoices();
+            this.voicesLoaded = this.availableVoices.length > 0;
+            if (this.voicesLoaded) {
+                console.log(`✅ Loaded ${this.availableVoices.length} browser voices`);
+            }
+        };
+
+        loadVoicesList();
+        if (this.speechSynthesis.onvoiceschanged !== undefined) {
+            this.speechSynthesis.onvoiceschanged = loadVoicesList;
+        }
+    }
+
+    // ==========================================
+    // 🔄 Initialize & Reset
+    // ==========================================
+    async init(data = {}) {
+        console.log("🎤 Speaking.init() called");
+        
+        try {
+            // 1️⃣ ریست وضعیت قبلی
+            this.resetState();
+            
+            // 2️⃣ دریافت و تنظیم شناسه درس
+            if (data.lessonId) {
+                this.lessonId = data.lessonId;
+            } else if (this.app?.lessonManager?.currentLessonId) {
+                this.lessonId = this.app.lessonManager.currentLessonId;
+            } else {
+                this.lessonId = '1'; // پیش‌فرض
+            }
+            
+            console.log(`📚 Lesson ID set to: ${this.lessonId}`);
+            
+            // 3️⃣ بررسی قابلیت‌های مرورگر
+            this.checkBrowserCapabilities();
+            
+            // 4️⃣ بارگذاری داده‌های Speaking
+            await this.loadSpeakingData();
+            
+            // 5️⃣ مقداردهی اولیه تشخیص گفتار
+            this.initSpeechRecognition();
+            
+            console.log("✅ Speaking module initialized successfully");
+            return this;
+            
+        } catch (error) {
+            console.error("❌ Error initializing Speaking module:", error);
+            
+            // استفاده از داده‌های پیش‌فرض در صورت خطا
+            this.useDefaultData();
+            
+            // نمایش پیام خطا به کاربر
+            this.showNotification(
+                '⚠️ خطا در بارگذاری ماژول Speaking. از داده‌های پیش‌فرض استفاده می‌شود.',
+                'warning'
+            );
+            
+            return this;
+        }
+    }
+
+    // ==========================================
+    // 🛡️ بررسی قابلیت‌های مرورگر
+    // ==========================================
+    checkBrowserCapabilities() {
+        this.capabilities = {
+            speechRecognition: 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window,
+            getUserMedia: 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices,
+            speechSynthesis: 'speechSynthesis' in window,
+            audioContext: 'AudioContext' in window || 'webkitAudioContext' in window
+        };
+        
+        console.log("🔍 Browser capabilities:", this.capabilities);
+    }
+
+    // ==========================================
+    // 🔄 Reset State
+    // ==========================================
+    resetState() {
+        console.log("🎤 Resetting Speaking state...");
+        
+        this.cleanup();
+        this.stopAudioOnly();
+        
+        // ریست وضعیت داده‌ها
+        this.currentLevel = 'beginner';
+        this.currentExercise = null;
         this.speakingData = null;
         
-        // سیستم تحلیل تلفظ واقعی
-        this.pronunciationAnalyzer = {
-            // حداقل طول صوت برای تحلیل (میلی‌ثانیه)
-            MIN_AUDIO_LENGTH: 1000,
-            
-            // آیا صوت واقعی ضبط شده؟
-            isAudioValid: false,
-            
-            // معیارهای تحلیل
-            criteria: {
-                pronunciationAccuracy: {
-                    weight: 0.5,
-                    description: 'دقت تلفظ حروف و صداها',
-                    check: (audioData) => this.checkPronunciationAccuracy(audioData)
-                },
-                timing: {
-                    weight: 0.2,
-                    description: 'سرعت و زمان‌بندی',
-                    check: (audioData) => this.checkTiming(audioData)
-                },
-                volumeConsistency: {
-                    weight: 0.15,
-                    description: 'یکنواختی صدا',
-                    check: (audioData) => this.checkVolumeConsistency(audioData)
-                },
-                clarity: {
-                    weight: 0.15,
-                    description: 'وضوح گفتار',
-                    check: (audioData) => this.checkClarity(audioData)
-                }
-            },
-            
-            // نتایج تحلیل
-            lastAnalysis: null,
-            isAnalyzing: false
-        };
+        // ریست وضعیت پیشرفت
+        this.completedExercises = new Set();
+        this.totalScore = 0;
+        this.attemptCount = 0;
+        this.finalTranscript = '';
+        this.isRecording = false;
         
-        // Bind methods
-        this.loadUserProgress = this.loadUserProgress.bind(this);
-        this.saveUserProgress = this.saveUserProgress.bind(this);
-        this.checkDailyStreak = this.checkDailyStreak.bind(this);
+        // ریست کش صداها
+        this.audioCache.clear();
+        
+        console.log("🔄 Speaking state reset complete");
     }
 
-    async init(data) {
-        console.log("✅ Speaking Module Initialized");
-        this.lessonData = data || {};
-        this.loadUserProgress();
-        
-        await this.loadSpeakingData();
-        
-        return this;
-    }
-
+    // ==========================================
+    // 📥 Load Data & Preload Audio (نسخه اصلاح شده)
+    // ==========================================
     async loadSpeakingData() {
         try {
-            const lessonId = this.app.lessonManager?.currentLessonId || '1';
-            console.log(`📂 Loading speaking data for lesson ${lessonId}...`);
+            console.log(`📥 Loading speaking data for Lesson ${this.lessonId}...`);
             
-            const response = await fetch(`data/lesson${lessonId}/speaking.json`);
+            const response = await fetch(`data/lesson${this.lessonId}/speaking.json`);
+            
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(`HTTP ${response.status} - ${response.statusText}`);
             }
             
             this.speakingData = await response.json();
-            console.log("✅ Speaking data loaded:", this.speakingData);
             
-            this.processSpeakingData();
+            // پردازش داده‌های بارگذاری شده با ساختار انعطاف‌پذیر
+            this.processLoadedData();
+            
+            console.log("✅ Speaking data loaded successfully");
             
         } catch (error) {
-            console.error("❌ Error loading speaking.json:", error);
+            console.error("❌ Error loading speaking data:", error);
+            // استفاده از داده‌های پیش‌فرض
             this.useDefaultData();
         }
     }
 
-    processSpeakingData() {
-        if (!this.speakingData || !this.speakingData.levels) {
-            console.warn("⚠️ No levels found in speaking data, using defaults");
+    processLoadedData() {
+        console.log("📦 Processing loaded speaking data...");
+        
+        // حالت 1: ساختار استاندارد با levels
+        if (this.speakingData && this.speakingData.levels) {
+            this.exercises = this.speakingData.levels;
+            console.log(`📊 Loaded ${Object.keys(this.exercises).length} levels from 'levels' property`);
+        }
+        // حالت 2: ساختار مستقیم (بدون levels)
+        else if (this.speakingData && (this.speakingData.beginner || this.speakingData.intermediate || this.speakingData.advanced)) {
+            this.exercises = this.speakingData;
+            console.log(`📊 Loaded ${Object.keys(this.exercises).length} levels directly`);
+        }
+        // حالت 3: داده خام آرایه‌ای
+        else if (Array.isArray(this.speakingData)) {
+            this.exercises = { beginner: this.speakingData };
+            console.log(`📊 Loaded array with ${this.speakingData.length} exercises as beginner level`);
+        }
+        // حالت 4: داده‌های پیش‌فرض
+        else {
+            console.warn("⚠️ Invalid or empty speaking data structure, using defaults");
             this.useDefaultData();
             return;
         }
-
-        this.exercises = {
-            beginner: this.speakingData.levels.beginner || [],
-            intermediate: this.speakingData.levels.intermediate || [],
-            advanced: this.speakingData.levels.advanced || []
-        };
-
-        console.log(`📊 Processed exercises`);
+        
+        // تنظیم تمرین اول از سطح انتخاب‌شده
+        const levelExercises = this.exercises[this.currentLevel];
+        if (levelExercises && levelExercises.length > 0) {
+            this.currentExercise = levelExercises[0];
+            
+            // پیش‌بارگذاری صداهای این سطح
+            this.preloadAudioFiles(levelExercises);
+            
+            console.log(`📝 Initial exercise set to: ${this.currentExercise.id}`);
+        }
+        
+        // لاگ جزئیات
+        Object.keys(this.exercises).forEach(level => {
+            const exercises = this.exercises[level];
+            console.log(`   ${level}: ${Array.isArray(exercises) ? exercises.length : '?'} exercises`);
+        });
     }
 
     useDefaultData() {
         console.log("🔄 Using default speaking data");
+        
         this.exercises = {
             beginner: [
-                {
-                    id: "b1",
-                    type: "word",
-                    text: "Hello",
-                    phonetic: "/həˈloʊ/",
-                    translation: "سلام",
-                    difficulty: 1
-                },
-                {
-                    id: "b2",
-                    type: "word",
-                    text: "Teacher",
-                    phonetic: "/ˈtiːtʃər/",
-                    translation: "معلم",
-                    difficulty: 1
-                }
+                { id: 'b1', text: "Hello", translation: "سلام", phonetic: "/həˈloʊ/" },
+                { id: 'b2', text: "Good morning", translation: "صبح بخیر", phonetic: "/ɡʊd ˈmɔːrnɪŋ/" },
+                { id: 'b3', text: "Thank you", translation: "متشکرم", phonetic: "/θæŋk juː/" },
+                { id: 'b4', text: "How are you?", translation: "حال شما چطور است؟", phonetic: "/haʊ ɑːr juː/" }
             ],
             intermediate: [
-                {
-                    id: "i1",
-                    type: "sentence",
-                    text: "I study English every day",
-                    phonetic: "/aɪ ˈstʌdi ˈɪŋɡlɪʃ ˈevri deɪ/",
-                    translation: "من هر روز انگلیسی مطالعه می‌کنم",
-                    difficulty: 3
-                }
+                { id: 'i1', text: "I like learning English", translation: "من دوست دارم انگلیسی یاد بگیرم", phonetic: "/aɪ laɪk ˈlɜːrnɪŋ ˈɪŋɡlɪʃ/" },
+                { id: 'i2', text: "Where is the library?", translation: "کتابخانه کجاست؟", phonetic: "/weər ɪz ðə ˈlaɪbreri/" }
             ],
             advanced: [
-                {
-                    id: "a1",
-                    type: "tongue_twister",
-                    text: "She sells seashells by the seashore",
-                    phonetic: "/ʃiː sɛlz ˈsiːʃɛlz baɪ ðə ˈsiːʃɔːr/",
-                    translation: "او صدف‌ها را در ساحل می‌فروشد",
-                    difficulty: 5,
-                    hint: "روی صداهای 's' و 'sh' تمرکز کن"
-                }
+                { id: 'a1', text: "She sells seashells by the seashore", translation: "تمرین تلفظ پیشرفته", phonetic: "Tongue Twister" }
             ]
         };
-    }
-
-    getGoogleTTSUrl(text) {
-        const encodedText = encodeURIComponent(text);
-        return `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=${encodedText}`;
-    }
-
-    // ============ متدهای اصلی ============
-    
-    render() {
-        console.log("🎤 Rendering Speaking section...");
-        return `
-            <div class="speaking-container animate__animated animate__fadeIn" id="speaking-container">
-                <div class="speaking-header">
-                    <h3>🎤 تمرین تلفظ</h3>
-                    <p>${this.speakingData?.title || 'تلفظ کلمات و جملات کتاب درسی را تمرین کنید'}</p>
-                </div>
-                
-                <div class="speaking-stats">
-                    <div class="stat-card">
-                        <span class="stat-value">${this.state.score}</span>
-                        <span class="stat-label">امتیاز</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-value">${this.state.streak}</span>
-                        <span class="stat-label">روز متوالی</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-value">${this.state.exercisesCompleted}</span>
-                        <span class="stat-label">تمرین انجام شده</span>
-                    </div>
-                </div>
-                
-                <div class="level-selector">
-                    <h4>🎯 سطح خود را انتخاب کنید:</h4>
-                    <div class="level-buttons">
-                        <button class="level-btn ${this.state.currentLevel === 'beginner' ? 'active' : ''}" 
-                                data-level="beginner">
-                            🟢 مبتدی (${this.exercises.beginner?.length || 0} تمرین)
-                        </button>
-                        <button class="level-btn ${this.state.currentLevel === 'intermediate' ? 'active' : ''}" 
-                                data-level="intermediate">
-                            🟡 متوسط (${this.exercises.intermediate?.length || 0} تمرین)
-                        </button>
-                        <button class="level-btn ${this.state.currentLevel === 'advanced' ? 'active' : ''}" 
-                                data-level="advanced">
-                            🔴 پیشرفته (${this.exercises.advanced?.length || 0} تمرین)
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="exercise-section" id="exercise-section">
-                    ${this.renderExerciseSelection()}
-                </div>
-                
-                <div class="tips-section">
-                    <h4>⚠️ توجه مهم:</h4>
-                    <p><strong>سیستم تحلیل واقعی تلفظ:</strong> برای دریافت نمره باید واقعاً صحبت کنید و صوت شما آنالیز خواهد شد. دکمه "بررسی تلفظ" فقط بعد از ضبط صوت فعال می‌شود.</p>
-                </div>
-            </div>
-        `;
-    }
-
-    renderExerciseSelection() {
-        const currentExercises = this.exercises[this.state.currentLevel] || [];
         
-        if (!currentExercises || currentExercises.length === 0) {
-            return `
-                <div class="no-exercises">
-                    <i class="fas fa-microphone-slash fa-2x"></i>
-                    <p>هیچ تمرینی برای این سطح تعریف نشده است.</p>
-                    <button onclick="app.sectionHandlers.speaking.module.changeLevel('beginner')" class="btn-gradient">
-                        بازگشت به سطح مبتدی
-                    </button>
-                </div>
-            `;
+        const levelData = this.exercises[this.currentLevel];
+        if (levelData && levelData.length > 0) {
+            this.currentExercise = levelData[0];
         }
-        
-        return `
-            <div class="exercises-grid">
-                ${currentExercises.map((exercise, index) => `
-                    <div class="exercise-card" data-exercise-id="${exercise.id}">
-                        <div class="exercise-icon">
-                            ${exercise.type === 'word' ? '🔤' : 
-                              exercise.type === 'sentence' ? '📝' : '🌀'}
-                        </div>
-                        <div class="exercise-info">
-                            <h5>${exercise.text}</h5>
-                            <p class="exercise-translation">${exercise.translation}</p>
-                            <div class="exercise-difficulty">
-                                ${'⭐'.repeat(exercise.difficulty || 1)}
-                            </div>
-                        </div>
-                        <button class="start-exercise-btn" data-exercise-id="${exercise.id}">
-                            شروع تمرین
-                        </button>
-                    </div>
-                `).join('')}
-            </div>
-        `;
     }
 
-    bindEvents(container) {
-        console.log("🎯 Speaking: bindEvents called with container:", container);
+    async preloadAudioFiles(levelExercises) {
+        if (!levelExercises || !this.lessonId) return;
         
-        if (!container) {
-            console.error("❌ Speaking: Container is null or undefined");
-            container = document.getElementById('speaking-container') || 
-                       document.getElementById('section-container');
-            if (!container) {
-                console.error("❌ Speaking: Could not find any container");
+        const basePath = `data/lesson${this.lessonId}/audio/speaking`;
+        
+        for (const exercise of levelExercises) {
+            const audioPath = `${basePath}/${exercise.id}.mp3`;
+            
+            // اگر از قبل در کش نیست
+            if (!this.audioCache.has(exercise.id)) {
+                try {
+                    const response = await fetch(audioPath, { method: 'HEAD' });
+                    if (response.ok) {
+                        this.audioCache.set(exercise.id, audioPath);
+                        console.log(`🎵 Preloaded: ${exercise.id}`);
+                    }
+                } catch (e) {
+                    // فایل وجود ندارد - این خطا نیست
+                }
+            }
+        }
+    }
+
+    // ==========================================
+    // 🎵 Smart 6-Layer Audio System
+    // ==========================================
+    async playSmartAudio(text, exerciseId) {
+        if (this.isRecording) return;
+
+        return new Promise(async (resolve) => {
+            if (!text) {
+                resolve();
                 return;
             }
-        }
-        
-        this.container = container;
-        
-        container.addEventListener('click', (e) => {
-            this.handleClick(e);
+
+            this.stopAudioOnly();
+            this.updatePlayButtonState(true);
+            await new Promise(r => setTimeout(r, 50));
+
+            let played = false;
+
+            // 🎵 Layer 1: Local MP3 File
+            if (exerciseId && this.audioCache.has(exerciseId)) {
+                try {
+                    await this.playLocalFile(this.audioCache.get(exerciseId));
+                    played = true;
+                    console.log("✅ Layer 1: Local File");
+                } catch (e) {
+                    console.warn('⚠️ Layer 1 failed');
+                }
+            }
+
+            // 🎵 Layer 2: TTS Cache
+            if (!played && this.lessonId) {
+                const cachePath = `data/lesson${this.lessonId}/audio/tts-cache/${this.sanitizeFilename(text)}.mp3`;
+                try {
+                    const response = await fetch(cachePath, { method: 'HEAD' });
+                    if (response.ok) {
+                        await this.playLocalFile(cachePath);
+                        played = true;
+                        console.log("✅ Layer 2: TTS Cache");
+                    }
+                } catch (e) {
+                    console.warn('⚠️ Layer 2 failed');
+                }
+            }
+
+            // 🎵 Layer 3: ResponsiveVoice (Optional)
+            if (!played && navigator.onLine && typeof responsiveVoice !== 'undefined') {
+                try {
+                    await this.playResponsiveVoice(text);
+                    played = true;
+                    console.log("✅ Layer 3: ResponsiveVoice");
+                } catch (e) {
+                    console.warn('⚠️ Layer 3 failed');
+                }
+            }
+
+            // 🎵 Layer 4: Browser Native TTS
+            if (!played) {
+                try {
+                    await this.playBrowserTTS(text);
+                    played = true;
+                    console.log("✅ Layer 4: Browser TTS");
+                } catch (e) {
+                    console.warn('⚠️ Layer 4 failed');
+                }
+            }
+
+            // 🎵 Layer 5: Visual Feedback Only
+            if (!played) {
+                console.warn('🔇 All audio layers failed. Visual only.');
+                await new Promise(r => setTimeout(r, 1000));
+            }
+
+            this.updatePlayButtonState(false);
+            resolve();
         });
-        
-        console.log("✅ Speaking events bound successfully");
     }
 
-    handleClick(e) {
-        const levelBtn = e.target.closest('.level-btn');
-        if (levelBtn) {
-            const level = levelBtn.dataset.level;
-            this.changeLevel(level);
-            return;
-        }
-        
-        const startBtn = e.target.closest('.start-exercise-btn');
-        if (startBtn) {
-            const exerciseId = startBtn.dataset.exerciseId;
-            this.startExercise(exerciseId);
-            return;
-        }
-        
-        if (e.target.closest('#play-native-btn')) {
-            this.playNativeAudio();
-            return;
-        }
-        
-        if (e.target.closest('#stop-audio-btn')) {
-            this.stopCurrentAudio();
-            return;
-        }
-        
-        if (e.target.closest('#start-record-btn')) {
-            this.startRecording();
-            return;
-        }
-        
-        if (e.target.closest('#stop-record-btn')) {
-            this.stopRecording();
-            return;
-        }
-        
-        if (e.target.closest('#check-pronunciation-btn')) {
-            this.checkPronunciation();
-            return;
-        }
-        
-        if (e.target.closest('#back-to-menu-btn')) {
-            this.backToMenu();
-            return;
-        }
-        
-        if (e.target.closest('.btn-retry')) {
-            this.retryExercise();
-            return;
-        }
-        
-        if (e.target.closest('.btn-next')) {
-            this.nextExercise();
-            return;
-        }
+    playLocalFile(path) {
+        return new Promise((resolve, reject) => {
+            const audio = new Audio(path);
+            this.currentAudio = audio;
+            
+            audio.onended = () => {
+                this.currentAudio = null;
+                resolve();
+            };
+            
+            audio.onerror = (e) => {
+                this.currentAudio = null;
+                reject(e);
+            };
+            
+            audio.play().catch(reject);
+        });
     }
 
-    changeLevel(level) {
-        console.log(`📊 Changing level to: ${level}`);
-        this.state.currentLevel = level;
-        
-        let container = this.container || 
-                       document.getElementById('speaking-container') ||
-                       document.getElementById('section-container');
-        
-        if (container) {
-            container.innerHTML = this.render();
-            this.bindEvents(container);
-        }
+    playResponsiveVoice(text) {
+        return new Promise((resolve, reject) => {
+            if (typeof responsiveVoice === 'undefined') {
+                reject(new Error('ResponsiveVoice not loaded'));
+                return;
+            }
+            
+            responsiveVoice.speak(text, 'US English Female', {
+                pitch: 1,
+                rate: 0.9,
+                volume: 1,
+                onend: resolve,
+                onerror: () => reject(new Error('ResponsiveVoice error'))
+            });
+        });
     }
 
-    async startExercise(exerciseId) {
-        console.log(`🚀 Starting exercise: ${exerciseId}`);
-        
-        this.stopCurrentAudio();
-        this.stopRecording();
-        this.hasRecordedAudio = false;
-        this.pronunciationAnalyzer.isAudioValid = false;
-        this.audioChunks = [];
-        
-        const allExercises = [
-            ...(this.exercises.beginner || []),
-            ...(this.exercises.intermediate || []),
-            ...(this.exercises.advanced || [])
+    playBrowserTTS(text) {
+        return new Promise((resolve) => {
+            if (!this.speechSynthesis) {
+                resolve();
+                return;
+            }
+            
+            if (!this.voicesLoaded) {
+                this.availableVoices = this.speechSynthesis.getVoices();
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.85;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+
+            // انتخاب بهترین صدا
+            const selectedVoice = this.selectBestVoice();
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+                console.log(`🎤 Using: ${selectedVoice.name}`);
+            }
+
+            utterance.onend = () => {
+                this.currentUtterance = null;
+                resolve();
+            };
+            
+            utterance.onerror = () => {
+                this.currentUtterance = null;
+                resolve();
+            };
+
+            this.currentUtterance = utterance;
+            this.speechSynthesis.speak(utterance);
+        });
+    }
+
+    selectBestVoice() {
+        if (this.availableVoices.length === 0) return null;
+
+        const preferred = [
+            'Google US English',
+            'Samantha',
+            'Microsoft Zira',
+            'Alex',
+            'Karen'
         ];
+
+        for (const name of preferred) {
+            const voice = this.availableVoices.find(v =>
+                v.name.toLowerCase().includes(name.toLowerCase()) &&
+                v.lang.startsWith('en')
+            );
+            if (voice) return voice;
+        }
+
+        return this.availableVoices.find(v => v.lang.startsWith('en-US')) ||
+               this.availableVoices.find(v => v.lang.startsWith('en')) ||
+               this.availableVoices[0];
+    }
+
+    stopAudioOnly() {
+        if (this.currentAudio) {
+            this.currentAudio.pause();
+            this.currentAudio.currentTime = 0;
+            this.currentAudio.src = '';
+            this.currentAudio = null;
+        }
         
-        this.state.currentExercise = allExercises.find(ex => ex.id === exerciseId);
+        if (this.speechSynthesis) {
+            this.speechSynthesis.cancel();
+        }
         
-        if (!this.state.currentExercise) {
-            console.error(`❌ Exercise ${exerciseId} not found`);
-            this.showNotification('تمرین یافت نشد!', 'error');
+        if (typeof responsiveVoice !== 'undefined') {
+            responsiveVoice.cancel();
+        }
+        
+        this.currentUtterance = null;
+        this.updatePlayButtonState(false);
+    }
+
+    updatePlayButtonState(isPlaying) {
+        const btn = this.container?.querySelector('#play-native-btn');
+        if (!btn) return;
+        
+        if (isPlaying) {
+            btn.classList.add('playing');
+            btn.innerHTML = '<i class="fas fa-stop"></i>';
+        } else {
+            btn.classList.remove('playing');
+            btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+        }
+    }
+
+    sanitizeFilename(text) {
+        return text
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, '-')
+            .replace(/-+/g, '-')
+            .substring(0, 50);
+    }
+
+    // ==========================================
+    // 🎤 Speech Recognition
+    // ==========================================
+    initSpeechRecognition() {
+        if (!this.capabilities.speechRecognition) {
+            console.warn("⚠️ Speech Recognition not supported");
             return;
         }
-        
-        const exerciseHtml = this.getExerciseHtml();
-        
-        let container = this.container || 
-                       document.getElementById('speaking-container') ||
-                       document.getElementById('section-container');
-        
-        if (container) {
-            container.innerHTML = exerciseHtml;
-            this.bindEvents(container);
-        }
-    }
 
-    getExerciseHtml() {
-        const currentExercise = this.state.currentExercise;
-        if (!currentExercise) return '';
-        
-        const isTongueTwister = currentExercise.type === 'tongue_twister';
-        
-        return `
-            <div class="exercise-page animate__animated animate__fadeIn">
-                <div class="exercise-header">
-                    <button class="btn-back" id="back-to-menu-btn">← بازگشت</button>
-                    <h3>🎤 تمرین تلفظ</h3>
-                </div>
-                
-                <div class="exercise-content">
-                    <div class="target-text-card">
-                        <h2 class="target-text">${currentExercise.text}</h2>
-                        <div class="phonetic-text">${currentExercise.phonetic || ''}</div>
-                        <div class="translation-text">📖 ${currentExercise.translation}</div>
-                        
-                        ${isTongueTwister && currentExercise.hint ? `
-                            <div class="hint-box">
-                                <i class="fas fa-lightbulb"></i>
-                                <strong>نکته:</strong> ${currentExercise.hint}
-                            </div>
-                        ` : ''}
-                        
-                        <div class="recording-status">
-                            <i class="fas fa-info-circle"></i>
-                            <small>برای بررسی تلفظ باید حداقل ۲ ثانیه صحبت کنید</small>
-                        </div>
-                    </div>
-                    
-                    <div class="audio-controls">
-                        <div class="native-audio-section">
-                            <h4>🎧 گوش دادن به تلفظ صحیح:</h4>
-                            <div class="audio-controls-row">
-                                <button class="btn-audio" id="play-native-btn">
-                                    <i class="fas fa-play"></i> پخش
-                                </button>
-                                <button class="btn-stop-audio" id="stop-audio-btn" style="display: none;">
-                                    <i class="fas fa-stop"></i> توقف
-                                </button>
-                                <span class="audio-status" id="audio-status">آماده</span>
-                            </div>
-                            
-                            <div class="waveform-placeholder" id="native-waveform">
-                                <div class="wave-bar" style="height: 60%"></div>
-                                <div class="wave-bar" style="height: 40%"></div>
-                                <div class="wave-bar" style="height: 80%"></div>
-                                <div class="wave-bar" style="height: 30%"></div>
-                                <div class="wave-bar" style="height: 70%"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="recording-section">
-                            <h4>🎤 تمرین شما:</h4>
-                            <div class="recording-controls">
-                                <button class="btn-record ${this.isRecording ? 'recording' : ''}" 
-                                        id="start-record-btn">
-                                    <i class="fas fa-microphone"></i>
-                                    ${this.isRecording ? 'در حال ضبط...' : 'شروع ضبط'}
-                                </button>
-                                <button class="btn-stop" id="stop-record-btn" style="display: none;">
-                                    <i class="fas fa-stop"></i> توقف
-                                </button>
-                            </div>
-                            
-                            <div class="recording-timer" id="recording-timer" style="display: none;">
-                                ⏱️ <span id="timer-display">00:00</span>
-                            </div>
-                            
-                            <div class="audio-indicators">
-                                <div class="audio-indicator" id="audio-length-indicator">
-                                    <span>مدت زمان ضبط: </span>
-                                    <strong id="audio-length-display">0 ثانیه</strong>
-                                </div>
-                                <div class="audio-indicator" id="audio-valid-indicator">
-                                    <span>وضعیت: </span>
-                                    <strong id="audio-valid-display" class="status-invalid">آماده نشده</strong>
-                                </div>
-                            </div>
-                            
-                            <button class="btn-check" id="check-pronunciation-btn" disabled>
-                                <i class="fas fa-check"></i> بررسی تلفظ (نیاز به ضبط صوت)
-                            </button>
-                            
-                            <div class="audio-warning" id="audio-warning" style="display: none;">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <span id="warning-text"></span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="results-section" id="results-section" style="display: none;">
-                        <h4>📊 نتیجه تحلیل تلفظ:</h4>
-                        <div class="score-display">
-                            <div class="score-circle">
-                                <span id="pronunciation-score">0</span>%
-                            </div>
-                            <div class="score-feedback">
-                                <p id="score-feedback-text">در حال تحلیل...</p>
-                            </div>
-                        </div>
-                        
-                        <div class="analysis-details" id="analysis-details">
-                            <!-- جزئیات تحلیل نمایش داده می‌شود -->
-                        </div>
-                        
-                        <div class="improvement-tips" id="improvement-tips">
-                            <!-- نکات بهبود نمایش داده می‌شود -->
-                        </div>
-                        
-                        <div class="action-buttons">
-                            <button class="btn-retry" id="retry-btn">
-                                <i class="fas fa-redo"></i> تمرین مجدد
-                            </button>
-                            <button class="btn-next" id="next-btn">
-                                <i class="fas fa-arrow-right"></i> تمرین بعدی
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        this.recognition = new SpeechRecognition();
+        this.recognition.continuous = true;
+        this.recognition.interimResults = true;
+        this.recognition.lang = 'en-US';
 
-    // ============ سیستم صوتی ============
-    
-    async playNativeAudio() {
-        console.log("▶️ Attempting to play native audio...");
-        
-        if (!this.state.currentExercise) {
-            console.error("❌ No current exercise selected");
-            return;
-        }
-        
-        this.stopCurrentAudio();
-        this.showAudioLoading();
-        
-        try {
-            await this.tryAudioSources();
-        } catch (error) {
-            console.error("❌ All audio sources failed:", error);
-            this.showAudioError();
-            this.showNotification('خطا در پخش صوت. لطفاً اتصال اینترنت را بررسی کنید.', 'error');
-        }
-    }
-
-    async tryAudioSources() {
-        const sortedSources = [...this.audioService.sources].sort((a, b) => a.priority - b.priority);
-        
-        for (const source of sortedSources) {
-            try {
-                const isAvailable = await Promise.resolve(source.available());
-                if (!isAvailable) {
-                    console.log(`⏭️ Skipping ${source.name} - not available`);
-                    continue;
-                }
-                
-                console.log(`🎵 Trying audio source: ${source.name}`);
-                
-                if (source.type === 'speech') {
-                    await this.playWithWebSpeech();
-                    this.audioService.currentSource = source.name;
-                    return;
-                } else if (source.type === 'api') {
-                    const audioUrl = source.getUrl(this.state.currentExercise.text);
-                    await this.playWithAudioElement(audioUrl, source.name);
-                    this.audioService.currentSource = source.name;
-                    return;
-                }
-            } catch (error) {
-                console.warn(`⚠️ Audio source ${source.name} failed:`, error);
-                continue;
+        this.recognition.onresult = (event) => this.handleRecognitionResult(event);
+        this.recognition.onerror = (event) => {
+            if (event.error !== 'no-speech') {
+                console.warn("🎤 Recognition error:", event.error);
             }
-        }
+        };
         
-        throw new Error('All audio sources failed');
-    }
-
-    async playWithWebSpeech() {
-        return new Promise((resolve, reject) => {
-            try {
-                const utterance = new SpeechSynthesisUtterance(this.state.currentExercise.text);
-                utterance.lang = 'en-US';
-                utterance.rate = this.state.currentExercise.type === 'tongue_twister' ? 0.6 : 0.8;
-                utterance.pitch = 1;
-                utterance.volume = 1;
-                
-                utterance.onstart = () => {
-                    console.log("✅ Web Speech API started");
-                    this.showAudioPlaying();
-                    this.animateWaveform('native-waveform');
-                };
-                
-                utterance.onend = () => {
-                    console.log("✅ Web Speech API ended");
-                    this.showAudioStopped();
-                    setTimeout(() => {
-                        this.showPronunciationTips();
-                    }, 500);
-                    resolve();
-                };
-                
-                utterance.onerror = (event) => {
-                    console.error("❌ Web Speech API error:", event.error);
-                    this.showAudioStopped();
-                    reject(new Error(`Web Speech error: ${event.error}`));
-                };
-                
-                speechSynthesis.speak(utterance);
-                this.currentUtterance = utterance;
-            } catch (error) {
-                reject(error);
+        this.recognition.onend = () => {
+            if (this.isRecording) {
+                this.isRecording = false;
+                this.updateUiState(false);
+                console.log("🎤 Recognition ended");
             }
-        });
+        };
+        
+        console.log("✅ Speech Recognition initialized");
     }
 
-    async playWithAudioElement(audioUrl, sourceName) {
-        return new Promise((resolve, reject) => {
-            try {
-                if (this.audioService.audioElement) {
-                    this.audioService.audioElement.pause();
-                    this.audioService.audioElement = null;
-                }
-                
-                const audio = new Audio(audioUrl);
-                this.audioService.audioElement = audio;
-                
-                audio.addEventListener('canplaythrough', () => {
-                    console.log(`✅ ${sourceName}: Audio ready`);
-                });
-                
-                audio.addEventListener('playing', () => {
-                    console.log(`✅ ${sourceName}: Audio playing`);
-                    this.showAudioPlaying();
-                    this.animateWaveform('native-waveform');
-                });
-                
-                audio.addEventListener('ended', () => {
-                    console.log(`✅ ${sourceName}: Audio finished`);
-                    this.showAudioStopped();
-                    setTimeout(() => {
-                        this.showPronunciationTips();
-                    }, 500);
-                    resolve();
-                });
-                
-                audio.addEventListener('error', (e) => {
-                    console.error(`❌ ${sourceName}: Audio error`, e);
-                    this.showAudioStopped();
-                    reject(new Error(`${sourceName} audio error`));
-                });
-                
-                const playPromise = audio.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        console.error(`❌ ${sourceName}: Play error`, error);
-                        this.showAudioStopped();
-                        reject(error);
-                    });
-                }
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
-
-    showAudioLoading() {
-        const playBtn = document.getElementById('play-native-btn');
-        const stopBtn = document.getElementById('stop-audio-btn');
-        const statusEl = document.getElementById('audio-status');
-        
-        if (playBtn) playBtn.style.display = 'none';
-        if (stopBtn) {
-            stopBtn.style.display = 'inline-block';
-            stopBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال بارگذاری...';
-            stopBtn.disabled = true;
-        }
-        if (statusEl) {
-            statusEl.textContent = 'در حال بارگذاری...';
-            statusEl.className = 'audio-status loading';
-        }
-    }
-
-    showAudioPlaying() {
-        const playBtn = document.getElementById('play-native-btn');
-        const stopBtn = document.getElementById('stop-audio-btn');
-        const statusEl = document.getElementById('audio-status');
-        
-        if (playBtn) playBtn.style.display = 'none';
-        if (stopBtn) {
-            stopBtn.style.display = 'inline-block';
-            stopBtn.innerHTML = '<i class="fas fa-stop"></i> توقف';
-            stopBtn.disabled = false;
-        }
-        if (statusEl) {
-            const sourceName = this.audioService.currentSource || 'unknown';
-            statusEl.textContent = `در حال پخش (${sourceName})`;
-            statusEl.className = 'audio-status playing';
-        }
-        
-        this.audioService.isPlaying = true;
-    }
-
-    showAudioStopped() {
-        const playBtn = document.getElementById('play-native-btn');
-        const stopBtn = document.getElementById('stop-audio-btn');
-        const statusEl = document.getElementById('audio-status');
-        
-        if (playBtn) playBtn.style.display = 'inline-block';
-        if (stopBtn) stopBtn.style.display = 'none';
-        if (statusEl) {
-            statusEl.textContent = 'آماده';
-            statusEl.className = 'audio-status ready';
-        }
-        
-        this.audioService.isPlaying = false;
-    }
-
-    showAudioError() {
-        const playBtn = document.getElementById('play-native-btn');
-        const stopBtn = document.getElementById('stop-audio-btn');
-        const statusEl = document.getElementById('audio-status');
-        
-        if (playBtn) playBtn.style.display = 'inline-block';
-        if (stopBtn) stopBtn.style.display = 'none';
-        if (statusEl) {
-            statusEl.textContent = 'خطا در پخش';
-            statusEl.className = 'audio-status error';
-        }
-        
-        this.audioService.isPlaying = false;
-    }
-
-    stopCurrentAudio() {
-        if (this.currentUtterance) {
-            speechSynthesis.cancel();
-            this.currentUtterance = null;
-        }
-        
-        if (this.audioService.audioElement) {
-            this.audioService.audioElement.pause();
-            this.audioService.audioElement.currentTime = 0;
-            this.audioService.audioElement = null;
-        }
-        
-        this.showAudioStopped();
-    }
-
-    // ============ سیستم ضبط و تحلیل واقعی ============
-    
     async startRecording() {
-        console.log("🎤 Starting recording...");
+        if (this.isRecording) return;
         
+        // بررسی دسترسی میکروفون
+        if (!this.capabilities.getUserMedia) {
+            this.showNotification('مرورگر شما از میکروفون پشتیبانی نمی‌کند', 'error');
+            return;
+        }
+
         try {
-            this.stopCurrentAudio();
-            this.audioChunks = [];
-            this.hasRecordedAudio = false;
-            this.pronunciationAnalyzer.isAudioValid = false;
+            // توقف صداهای در حال پخش
+            this.stopAudioOnly();
             
             // درخواست دسترسی به میکروفون
-            this.stream = await navigator.mediaDevices.getUserMedia({ 
+            this.mediaStream = await navigator.mediaDevices.getUserMedia({ 
                 audio: {
                     echoCancellation: true,
                     noiseSuppression: true,
-                    sampleRate: 44100
-                } 
+                    autoGainControl: true
+                }
             });
             
-            const options = { 
-                mimeType: 'audio/webm;codecs=opus',
-                audioBitsPerSecond: 128000
-            };
-            
-            this.mediaRecorder = new MediaRecorder(this.stream, options);
-            
-            this.mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    this.audioChunks.push(event.data);
-                }
-            };
-            
-            this.mediaRecorder.onstop = () => {
-                this.handleRecordingStop();
-            };
-            
-            this.mediaRecorder.start(100); // جمع‌آوری داده هر 100ms
-            this.isRecording = true;
-            
-            // آپدیت UI
-            this.updateRecordingUI(true);
-            this.startTimer();
-            
-            console.log("✅ Recording started successfully");
-            
-        } catch (error) {
-            console.error("❌ Error starting recording:", error);
-            this.showNotification("خطا در دسترسی به میکروفون. لطفاً مجوزها را بررسی کنید.", 'error');
-            this.stopRecording();
-        }
-    }
-    
-    updateRecordingUI(isRecording) {
-        const recordingTimer = document.getElementById('recording-timer');
-        const stopBtn = document.getElementById('stop-record-btn');
-        const startBtn = document.getElementById('start-record-btn');
-        const checkBtn = document.getElementById('check-pronunciation-btn');
-        
-        if (isRecording) {
-            if (recordingTimer) recordingTimer.style.display = 'block';
-            if (stopBtn) stopBtn.style.display = 'inline-block';
-            if (startBtn) startBtn.style.display = 'none';
-            if (checkBtn) {
-                checkBtn.disabled = true;
-                checkBtn.innerHTML = '<i class="fas fa-check"></i> بررسی تلفظ (در حال ضبط...)';
-            }
-        } else {
-            if (recordingTimer) recordingTimer.style.display = 'none';
-            if (stopBtn) stopBtn.style.display = 'none';
-            if (startBtn) startBtn.style.display = 'inline-block';
-            if (checkBtn) {
-                checkBtn.disabled = !this.hasRecordedAudio;
-                checkBtn.innerHTML = this.hasRecordedAudio ? 
-                    '<i class="fas fa-check"></i> بررسی تلفظ' : 
-                    '<i class="fas fa-check"></i> بررسی تلفظ (نیاز به ضبط صوت)';
-            }
-        }
-    }
+            // راه‌اندازی آنالیزور صدا
+            if (this.capabilities.audioContext) {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                this.analyser = this.audioContext.createAnalyser();
+                
+                const source = this.audioContext.createMediaStreamSource(this.mediaStream);
+                source.connect(this.analyser);
+                
+                this.analyser.fftSize = 256;
+                this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
 
-    handleRecordingStop() {
-        console.log("🛑 Recording stopped");
-        
-        if (this.audioChunks.length > 0) {
-            const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
-            this.hasRecordedAudio = true;
-            
-            // تحلیل اولیه صوت
-            this.analyzeAudioDuration(audioBlob);
-            
-            console.log(`✅ Audio recorded: ${audioBlob.size} bytes`);
-        } else {
-            console.warn("⚠️ No audio data recorded");
-            this.showNotification("هیچ صدایی ضبط نشد. لطفاً دوباره تلاش کنید.", 'error');
-        }
-        
-        // قطع جریان میکروفون
-        if (this.stream) {
-            this.stream.getTracks().forEach(track => track.stop());
-            this.stream = null;
-        }
-        
-        this.isRecording = false;
-        this.updateRecordingUI(false);
-    }
-
-    async analyzeAudioDuration(audioBlob) {
-        try {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const arrayBuffer = await audioBlob.arrayBuffer();
-            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-            
-            const duration = audioBuffer.duration;
-            console.log(`⏱️ Audio duration: ${duration.toFixed(2)} seconds`);
-            
-            // آپدیت UI با مدت زمان
-            const lengthDisplay = document.getElementById('audio-length-display');
-            const validDisplay = document.getElementById('audio-valid-display');
-            const checkBtn = document.getElementById('check-pronunciation-btn');
-            const warningEl = document.getElementById('audio-warning');
-            
-            if (lengthDisplay) {
-                lengthDisplay.textContent = `${duration.toFixed(1)} ثانیه`;
+                // راه‌اندازی ویژوالایزر
+                this.drawVisualizer();
             }
+
+            // شروع تشخیص گفتار
+            if (this.recognition) {
+                this.finalTranscript = '';
+                try {
+                    this.recognition.start();
+                    this.isRecording = true;
+                    this.updateUiState(true);
+                    
+                    console.log("🎤 Recording started successfully");
+                    this.showNotification('ضبط صدا شروع شد', 'success');
+                    
+                } catch (e) {
+                    console.error("❌ Failed to start recognition:", e);
+                    this.showNotification('خطا در شروع ضبط صدا', 'error');
+                }
+            }
+
+        } catch (err) {
+            console.error("❌ Microphone access error:", err);
             
-            // بررسی حداقل طول صوت
-            if (duration >= 2.0) { // حداقل 2 ثانیه
-                this.pronunciationAnalyzer.isAudioValid = true;
-                
-                if (validDisplay) {
-                    validDisplay.textContent = "آماده برای تحلیل";
-                    validDisplay.className = "status-valid";
-                }
-                
-                if (checkBtn) {
-                    checkBtn.disabled = false;
-                    checkBtn.innerHTML = '<i class="fas fa-check"></i> بررسی تلفظ';
-                }
-                
-                if (warningEl) {
-                    warningEl.style.display = 'none';
-                }
-                
-                this.showNotification("صوت با موفقیت ضبط شد. می‌توانید تلفظ را بررسی کنید.", 'success');
-                
+            if (err.name === 'NotAllowedError') {
+                this.showNotification('دسترسی به میکروفون رد شد. لطفاً دسترسی را در تنظیمات مرورگر فعال کنید.', 'error');
+            } else if (err.name === 'NotFoundError') {
+                this.showNotification('هیچ میکروفونی یافت نشد.', 'error');
             } else {
-                this.pronunciationAnalyzer.isAudioValid = false;
-                
-                if (validDisplay) {
-                    validDisplay.textContent = "کوتاه (نیاز به حداقل ۲ ثانیه)";
-                    validDisplay.className = "status-invalid";
-                }
-                
-                if (checkBtn) {
-                    checkBtn.disabled = true;
-                    checkBtn.innerHTML = '<i class="fas fa-check"></i> بررسی تلفظ (صوت کوتاه است)';
-                }
-                
-                if (warningEl) {
-                    warningEl.style.display = 'flex';
-                    document.getElementById('warning-text').textContent = 
-                        `مدت زمان ضبط فقط ${duration.toFixed(1)} ثانیه است. حداقل ۲ ثانیه صحبت کنید.`;
-                }
-                
-                this.showNotification("صوت خیلی کوتاه است. حداقل ۲ ثانیه صحبت کنید.", 'warning');
+                this.showNotification('خطا در دسترسی به میکروفون', 'error');
             }
-            
-            audioContext.close();
-            
-        } catch (error) {
-            console.error("❌ Error analyzing audio:", error);
-            this.showNotification("خطا در تحلیل صوت ضبط شده", 'error');
         }
     }
 
     stopRecording() {
+        if (!this.isRecording) return;
+
         console.log("⏹️ Stopping recording...");
-        
-        if (this.mediaRecorder && this.isRecording) {
-            this.mediaRecorder.stop();
+
+        // توقف تشخیص گفتار
+        if (this.recognition) {
+            try {
+                this.recognition.stop();
+            } catch (e) {
+                console.warn("Recognition already stopped");
+            }
+        }
+
+        // توقف استریم میکروفون
+        if (this.mediaStream) {
+            this.mediaStream.getTracks().forEach(track => track.stop());
+            this.mediaStream = null;
         }
         
-        if (this.timerInterval) {
-            clearInterval(this.timerInterval);
-            this.timerInterval = null;
+        // بستن Audio Context
+        if (this.audioContext) {
+            this.audioContext.close().catch(e => console.warn("AudioContext close error:", e));
+            this.audioContext = null;
         }
         
+        // توقف انیمیشن ویژوالایزر
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+        }
+
         this.isRecording = false;
-        this.updateRecordingUI(false);
+        this.updateUiState(false);
+
+        // تحلیل نتیجه پس از تأخیر
+        setTimeout(() => {
+            this.analyzeResult();
+        }, 500);
     }
 
-    startTimer() {
-        let seconds = 0;
-        const timerDisplay = document.getElementById('timer-display');
+    handleRecognitionResult(event) {
+        let interimTranscript = '';
         
-        this.timerInterval = setInterval(() => {
-            seconds++;
-            const mins = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            if (timerDisplay) {
-                timerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-            }
-            
-            // حداکثر زمان ضبط: 30 ثانیه
-            if (seconds >= 30) {
-                this.stopRecording();
-            }
-        }, 1000);
-    }
-
-    // ============ تحلیل تلفظ واقعی ============
-    
-    async checkPronunciation() {
-        console.log("🔍 Starting real pronunciation analysis...");
-        
-        // بررسی اولیه
-        if (!this.hasRecordedAudio) {
-            this.showNotification("لطفاً ابتدا صوت خود را ضبط کنید.", 'error');
-            return;
-        }
-        
-        if (!this.pronunciationAnalyzer.isAudioValid) {
-            this.showNotification("صوت ضبط شده معتبر نیست. حداقل ۲ ثانیه صحبت کنید.", 'error');
-            return;
-        }
-        
-        // غیرفعال کردن دکمه
-        const checkBtn = document.getElementById('check-pronunciation-btn');
-        if (checkBtn) {
-            checkBtn.disabled = true;
-            checkBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال تحلیل...';
-        }
-        
-        // نمایش بخش نتایج
-        const resultsSection = document.getElementById('results-section');
-        if (resultsSection) {
-            resultsSection.style.display = 'block';
-        }
-        
-        try {
-            // شبیه‌سازی تحلیل زمان‌بر
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            
-            // تحلیل واقعی (با شبیه‌سازی پیچیده‌تر)
-            const analysisResult = await this.performRealAnalysis();
-            
-            // نمایش نتایج
-            this.displayAnalysisResults(analysisResult);
-            
-            // ذخیره پیشرفت
-            if (analysisResult.score >= 60) { // حداقل نمره برای قبولی
-                this.state.score += analysisResult.score;
-                this.state.exercisesCompleted++;
-                this.state.streak++;
-                this.saveUserProgress();
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+                this.finalTranscript += event.results[i][0].transcript + ' ';
             } else {
-                this.showNotification("تلفظ نیاز به بهبود دارد. دوباره تلاش کنید.", 'warning');
+                interimTranscript += event.results[i][0].transcript;
             }
-            
-        } catch (error) {
-            console.error("❌ Error in pronunciation analysis:", error);
-            this.showNotification("خطا در تحلیل تلفظ. لطفاً دوباره تلاش کنید.", 'error');
-        } finally {
-            if (checkBtn) {
-                checkBtn.disabled = false;
-                checkBtn.innerHTML = '<i class="fas fa-check"></i> بررسی مجدد';
-            }
+        }
+        
+        const status = this.container?.querySelector('#status-text');
+        if (status && interimTranscript) {
+            status.textContent = `🎙️ "${interimTranscript.trim()}"`;
         }
     }
 
-    async performRealAnalysis() {
-        // اینجا تحلیل واقعی انجام می‌شود
-        // در نسخه واقعی، باید از Web Audio API یا API سرویس‌های خارجی استفاده شود
+    // ==========================================
+    // 📊 Analysis & Scoring
+    // ==========================================
+    analyzeResult() {
+        if (!this.currentExercise) return;
         
-        const currentExercise = this.state.currentExercise;
-        const text = currentExercise.text.toLowerCase();
-        
-        // شبیه‌سازی تحلیل پیچیده‌تر
-        let baseScore = 50; // نمره پایه
-        
-        // عوامل کاهش نمره (شبیه‌سازی خطاهای رایج)
-        const errorFactors = {
-            shortDuration: this.audioChunks.length < 10 ? 15 : 0,
-            weakVolume: 10, // شبیه‌سازی صدای ضعیف
-            backgroundNoise: 5, // شبیه‌سازی نویز زمینه
-        };
-        
-        // عوامل افزایش نمره بر اساس نوع تمرین
-        const exerciseFactors = {
-            word: 20,
-            sentence: 15,
-            tongue_twister: 10
-        };
-        
-        // محاسبه نمره نهایی
-        let finalScore = baseScore + exerciseFactors[currentExercise.type] || 0;
-        
-        // کسر خطاها
-        finalScore -= Object.values(errorFactors).reduce((a, b) => a + b, 0);
-        
-        // محدود کردن نمره بین 0 تا 100
-        finalScore = Math.max(0, Math.min(100, finalScore));
-        
-        // تولید بازخورد بر اساس نمره
+        const targetText = this.normalize(this.currentExercise.text.toLowerCase());
+        const spokenText = this.normalize(this.finalTranscript.trim().toLowerCase());
+
+        let score = 0;
         let feedback = "";
-        let details = "";
-        let tips = "";
-        
-        if (finalScore >= 85) {
-            feedback = "عالی! 🎉 تلفظ شما بسیار خوب است.";
-            details = "همه حروف به درستی تلفظ شده‌اند. ریتم و آهنگ جمله مناسب است.";
-            tips = "به تمرین ادامه دهید تا تلفظ native-like داشته باشید.";
-        } else if (finalScore >= 70) {
-            feedback = "خوب 👍 اما نیاز به تمرین بیشتر دارید.";
-            details = "تلفظ کلی قابل قبول است اما برخی صداها نیاز به بهبود دارند.";
-            tips = "روی حروف صدادار و تکیه کلمات بیشتر تمرین کنید.";
-        } else if (finalScore >= 60) {
-            feedback = "قابل قبول 👌 نیاز به تمرین جدی دارید.";
-            details = "پیام اصلی منتقل می‌شود اما تلفظ نیاز به اصلاح دارد.";
-            tips = "هر روز ۱۵ دقیقه تمرین تلفظ داشته باشید. از آینه برای دیدن حرکات دهان استفاده کنید.";
+        let detailedAnalysis = "";
+
+        if (!spokenText) {
+            feedback = "❌ صدایی تشخیص داده نشد. لطفاً واضح‌تر صحبت کنید و دوباره تلاش کنید.";
+            score = 0;
         } else {
-            feedback = "نیاز به تمرین اساسی 🤔";
-            details = "تلفظ قابل درک نیست یا ایرادات اساسی دارد.";
-            tips = "با کلمات ساده شروع کنید. هر کلمه را ۱۰ بار تکرار کنید. از نمونه‌های صوتی کمک بگیرید.";
-        }
-        
-        // اضافه کردن نکات خاص بر اساس متن
-        const specificTips = this.generateSpecificTips(text);
-        
-        return {
-            score: Math.round(finalScore),
-            feedback: feedback,
-            details: details,
-            tips: tips + "<br><br>" + specificTips,
-            criteria: {
-                pronunciation: Math.round(finalScore * 0.7),
-                fluency: Math.round(finalScore * 0.8),
-                rhythm: Math.round(finalScore * 0.6),
-                volume: Math.round(finalScore * 0.9)
+            const similarity = this.calculateSimilarity(targetText, spokenText);
+            score = Math.floor(similarity);
+            
+            // بازخورد بر اساس نمره
+            if (score >= 95) {
+                feedback = "🎉 عالی! تلفظ شما تقریباً کامل بود!";
+            } else if (score >= 85) {
+                feedback = "✅ خیلی خوب! فقط چند خطای کوچک داشتید.";
+            } else if (score >= 70) {
+                feedback = "👍 خوب است! اما نیاز به تمرین بیشتر دارید.";
+            } else if (score >= 50) {
+                feedback = "⚠️ قابل فهم بود اما اشتباهات زیادی داشت. تمرین بیشتری لازم است.";
+            } else {
+                feedback = "❌ تلفظ شما با متن هدف تطابق کمی داشت. گوش دادن به نمونه صحیح کمک می‌کند.";
             }
-        };
+
+            // تحلیل جزئیات
+            const wordAnalysis = this.analyzeWords(targetText, spokenText);
+            if (wordAnalysis.mistakes.length > 0) {
+                detailedAnalysis = `
+                    <div class="mistakes-list">
+                        <strong>🔍 کلمات نیازمند توجه:</strong>
+                        ${wordAnalysis.mistakes.slice(0, 3).map(m => `
+                            <div class="mistake-item">
+                                <span class="wrong">"${m.spoken}"</span>
+                                <i class="fas fa-arrow-left"></i>
+                                <span class="correct">"${m.expected}"</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // ذخیره پیشرفت
+            if (score >= 70) {
+                this.completedExercises.add(this.currentExercise.id);
+            }
+            this.totalScore += score;
+            this.attemptCount++;
+        }
+
+        // نمایش نتیجه
+        this.showResultPanel(score, spokenText || "(سکوت)", feedback, detailedAnalysis);
     }
 
-    generateSpecificTips(text) {
-        let tips = "<strong>نکات خاص برای این تمرین:</strong><br>";
-        
-        if (text.includes('th')) {
-            tips += "- برای 'th': زبان را بین دندان‌ها قرار دهید<br>";
-        }
-        
-        if (text.includes('r')) {
-            tips += "- برای 'r': زبان را به سقف دهان نزدیک کنید<br>";
-        }
-        
-        if (text.includes('v') || text.includes('w')) {
-            tips += "- مراقب تفاوت 'v' و 'w' باشید<br>";
-        }
-        
-        if (text.includes('i') && text.includes('ee')) {
-            tips += "- تفاوت 'i' کوتاه و 'ee' بلند را رعایت کنید<br>";
-        }
-        
-        const words = text.split(' ');
-        if (words.length > 3) {
-            tips += "- روی کلمات مهم جمله تأکید بیشتری داشته باشید<br>";
-        }
-        
-        return tips;
+    normalize(text) {
+        return text
+            .toLowerCase()
+            .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
     }
 
-    displayAnalysisResults(analysis) {
-        // آپدیت نمره
-        const scoreElement = document.getElementById('pronunciation-score');
-        const feedbackElement = document.getElementById('score-feedback-text');
-        const detailsElement = document.getElementById('analysis-details');
-        const tipsElement = document.getElementById('improvement-tips');
+    calculateSimilarity(s1, s2) {
+        const distance = this.levenshteinDistance(s1, s2);
+        const maxLength = Math.max(s1.length, s2.length);
         
-        if (scoreElement) {
-            let currentScore = 0;
-            const increment = analysis.score / 20; // 20 فریم
-            const scoreInterval = setInterval(() => {
-                currentScore += increment;
-                scoreElement.textContent = Math.min(Math.round(currentScore), analysis.score);
-                
-                if (currentScore >= analysis.score) {
-                    clearInterval(scoreInterval);
-                    scoreElement.textContent = analysis.score;
+        if (maxLength === 0) return 100;
+        
+        const similarity = ((maxLength - distance) / maxLength) * 100;
+        return Math.max(0, Math.min(100, similarity));
+    }
+
+    levenshteinDistance(s1, s2) {
+        const m = s1.length;
+        const n = s2.length;
+        const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+
+        for (let i = 0; i <= m; i++) dp[i][0] = i;
+        for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+        for (let i = 1; i <= m; i++) {
+            for (let j = 1; j <= n; j++) {
+                if (s1[i - 1] === s2[j - 1]) {
+                    dp[i][j] = dp[i - 1][j - 1];
+                } else {
+                    dp[i][j] = Math.min(
+                        dp[i - 1][j] + 1,
+                        dp[i][j - 1] + 1,
+                        dp[i - 1][j - 1] + 1
+                    );
                 }
-            }, 50);
+            }
         }
-        
-        if (feedbackElement) {
-            feedbackElement.textContent = analysis.feedback;
-        }
-        
-        if (detailsElement) {
-            detailsElement.innerHTML = `
-                <h5>📋 جزئیات تحلیل:</h5>
-                <div class="criteria-grid">
-                    <div class="criterion">
-                        <span class="criterion-name">دقت تلفظ</span>
-                        <div class="criterion-bar">
-                            <div class="criterion-fill" style="width: ${analysis.criteria.pronunciation}%"></div>
-                        </div>
-                        <span class="criterion-score">${analysis.criteria.pronunciation}%</span>
-                    </div>
-                    <div class="criterion">
-                        <span class="criterion-name">روانی گفتار</span>
-                        <div class="criterion-bar">
-                            <div class="criterion-fill" style="width: ${analysis.criteria.fluency}%"></div>
-                        </div>
-                        <span class="criterion-score">${analysis.criteria.fluency}%</span>
-                    </div>
-                    <div class="criterion">
-                        <span class="criterion-name">ریتم</span>
-                        <div class="criterion-bar">
-                            <div class="criterion-fill" style="width: ${analysis.criteria.rhythm}%"></div>
-                        </div>
-                        <span class="criterion-score">${analysis.criteria.rhythm}%</span>
-                    </div>
-                    <div class="criterion">
-                        <span class="criterion-name">بلندی صدا</span>
-                        <div class="criterion-bar">
-                            <div class="criterion-fill" style="width: ${analysis.criteria.volume}%"></div>
-                        </div>
-                        <span class="criterion-score">${analysis.criteria.volume}%</span>
-                    </div>
-                </div>
-            `;
-        }
-        
-        if (tipsElement) {
-            tipsElement.innerHTML = `
-                <h5>💡 راهکارهای بهبود:</h5>
-                <div class="tips-content">
-                    ${analysis.tips}
-                </div>
-            `;
-        }
+
+        return dp[m][n];
     }
 
-    // ============ متدهای کمکی ============
-    
-    showNotification(message, type = 'info') {
-        const existing = document.querySelector('.notification');
-        if (existing) existing.remove();
+    analyzeWords(target, spoken) {
+        const targetWords = target.split(/\s+/);
+        const spokenWords = spoken.split(/\s+/);
+        
+        const mistakes = [];
+        const correctWords = [];
 
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.innerHTML = `
-            <div class="notification-content">
-                <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 
-                                 type === 'success' ? 'fa-check-circle' : 
-                                 type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i>
-                <span>${message}</span>
+        targetWords.forEach((word, index) => {
+            const spokenWord = spokenWords[index] || '';
+            
+            if (this.normalize(word) === this.normalize(spokenWord)) {
+                correctWords.push(word);
+            } else {
+                mistakes.push({
+                    expected: word,
+                    spoken: spokenWord || '(حذف شده)',
+                    position: index
+                });
+            }
+        });
+
+        return { mistakes, correctWords };
+    }
+
+    // ==========================================
+    // 🎨 UI & Rendering
+    // ==========================================
+    getHtml() {
+        const levelData = this.exercises[this.currentLevel] || [];
+        if (!this.currentExercise && levelData.length > 0) {
+            this.currentExercise = levelData[0];
+        }
+
+        if (!this.currentExercise) {
+            return `
+                <div class="speaking-container">
+                    <div class="speaking-header">
+                        <h1>🎤 آزمایشگاه تلفظ</h1>
+                    </div>
+                    <div class="speaking-content">
+                        <div class="loader">⏳ در حال بارگذاری داده...</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        const totalExercises = levelData.length;
+        const completedCount = Array.from(this.completedExercises).filter(id =>
+            levelData.some(ex => ex.id === id)
+        ).length;
+        
+        const progressPercent = totalExercises > 0 ? Math.floor((completedCount / totalExercises) * 100) : 0;
+        const averageScore = this.attemptCount > 0 ? Math.floor(this.totalScore / this.attemptCount) : 0;
+
+        return `
+            <div class="speaking-container">
+                
+                <!-- Header -->
+                <div class="speaking-header">
+                    <div class="header-right">
+                        <button id="home-btn" class="glass-btn" title="بازگشت به خانه">
+                            <i class="fas fa-home"></i>
+                            <span>خانه</span>
+                        </button>
+                    </div>
+                    <div class="header-title">
+                        <h1>🎤 آزمایشگاه تلفظ</h1>
+                    </div>
+                    <div class="header-left">
+                        <div class="level-selector">
+                            <label>سطح:</label>
+                            <select id="level-select" class="glass-select">
+                                <option value="beginner" ${this.currentLevel === 'beginner' ? 'selected' : ''}>مبتدی</option>
+                                <option value="intermediate" ${this.currentLevel === 'intermediate' ? 'selected' : ''}>متوسط</option>
+                                <option value="advanced" ${this.currentLevel === 'advanced' ? 'selected' : ''}>پیشرفته</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Card -->
+                <div class="stats-card">
+                    <div class="stat-item">
+                        <span class="stat-value">${completedCount}/${totalExercises}</span>
+                        <span class="stat-label">تمرین‌های تکمیل شده</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">${progressPercent}%</span>
+                        <span class="stat-label">پیشرفت</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">${averageScore}%</span>
+                        <span class="stat-label">میانگین نمره</span>
+                    </div>
+                </div>
+
+                <!-- Main Content -->
+                <div class="speaking-content">
+                    <div class="exercise-card">
+                        <div class="exercise-header">
+                            <div class="exercise-number">تمرین ${levelData.findIndex(ex => ex.id === this.currentExercise.id) + 1 || 1}</div>
+                        </div>
+
+                        <h2 class="target-sentence" dir="ltr">${this.currentExercise.text}</h2>
+                        ${this.currentExercise.phonetic ? `<p class="phonetic-guide" dir="ltr">${this.currentExercise.phonetic}</p>` : ''}
+                        <p class="translation">${this.currentExercise.translation}</p>
+
+                        <div class="control-panel">
+                            <button id="play-native-btn" class="glass-btn">
+                                <i class="fas fa-volume-up"></i>
+                                <span>شنیدن تلفظ صحیح</span>
+                            </button>
+                        </div>
+
+                        <div class="visualizer-container">
+                            <canvas id="visualizer-canvas" width="600" height="120"></canvas>
+                        </div>
+
+                        <div class="recording-status">
+                            <p id="status-text">🎤 برای شروع ضبط، دکمه میکروفون را بزنید</p>
+                        </div>
+
+                        <div class="control-panel">
+                            <button id="record-toggle-btn" class="glass-btn primary">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                        </div>
+
+                        <div id="result-panel" class="result-panel hidden">
+                            <div class="score-display">
+                                <div class="score-circle-container">
+                                    <svg viewBox="0 0 100 100">
+                                        <circle class="score-circle-bg" cx="50" cy="50" r="45" 
+                                                fill="none" stroke-width="8"></circle>
+                                        <circle id="score-circle" class="score-circle" cx="50" cy="50" r="45" 
+                                                fill="none" stroke-width="8" 
+                                                stroke-dasharray="283" stroke-dashoffset="283"></circle>
+                                    </svg>
+                                    <div class="score-text" id="score-val">0%</div>
+                                </div>
+                            </div>
+
+                            <p class="feedback-message" id="feedback-msg"></p>
+
+                            <div class="comparison-section">
+                                <div class="comparison-row">
+                                    <span class="label">متن هدف:</span>
+                                    <span class="expected-display" dir="ltr">${this.currentExercise.text}</span>
+                                </div>
+                                <div class="comparison-row">
+                                    <span class="label">شما گفتید:</span>
+                                    <span class="spoken-display" id="spoken-val" dir="ltr">-</span>
+                                </div>
+                            </div>
+
+                            <div id="detailed-analysis"></div>
+
+                            <div class="action-buttons">
+                                <button id="try-again-btn" class="glass-btn">
+                                    <i class="fas fa-redo"></i>
+                                    <span>تلاش دوباره</span>
+                                </button>
+                                <button id="next-btn" class="glass-btn primary">
+                                    <i class="fas fa-arrow-left"></i>
+                                    <span>تمرین بعدی</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hints -->
+                <div class="hints-section">
+                    <div class="hint-card">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>ابتدا به تلفظ صحیح گوش دهید</span>
+                    </div>
+                    <div class="hint-card">
+                        <i class="fas fa-headphones"></i>
+                        <span>در محیطی آرام تمرین کنید</span>
+                    </div>
+                </div>
             </div>
         `;
-        document.body.appendChild(notification);
-        
-        requestAnimationFrame(() => notification.classList.add('show'));
-
-        setTimeout(() => {
-            notification.classList.remove('show');
-            notification.classList.add('fade-out');
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
     }
 
-    animateWaveform(waveformId) {
-        const waveform = document.getElementById(waveformId);
-        if (!waveform) return;
+    render(targetElement) {
+        console.log("🎨 Speaking.render() called");
         
-        const bars = waveform.querySelectorAll('.wave-bar');
-        bars.forEach(bar => {
-            bar.style.transition = 'height 0.3s ease';
-            const randomHeight = Math.random() * 80 + 20;
-            bar.style.height = `${randomHeight}%`;
-        });
-    }
+        if (!targetElement) {
+            console.error("❌ targetElement is null or undefined");
+            return;
+        }
 
-    showPronunciationTips() {
-        const currentExercise = this.state.currentExercise;
-        if (!currentExercise) return;
-        
-        const text = currentExercise.text.toLowerCase();
-        let tips = '<div class="pronunciation-tips"><h5>🎯 نکات تلفظ این کلمه/جمله:</h5><ul>';
-        
-        if (text.includes('th')) {
-            tips += '<li>برای تلفظ "th" زبان را بین دندان‌ها قرار دهید</li>';
-        }
-        
-        if (text.includes('r')) {
-            tips += '<li>برای تلفظ "r" زبان را به سقف دهان نزدیک کنید</li>';
-        }
-        
-        if (text.includes('v') || text.includes('w')) {
-            tips += '<li>مراقب تفاوت "v" (لب پایین روی دندان) و "w" (لب‌ها گرد) باشید</li>';
-        }
-        
-        if (currentExercise.type === 'tongue_twister') {
-            tips += '<li>آهسته و شمرده شروع کنید</li>';
-            tips += '<li>روی صداهای مشابه (s و sh) تمرکز کنید</li>';
-            tips += '<li>به تدریج سرعت را افزایش دهید</li>';
-        }
-        
-        const words = text.split(' ');
-        if (words.length > 1) {
-            tips += '<li>روی کلمات مهم جمله تأکید بیشتری داشته باشید</li>';
-        }
-        
-        tips += '</ul></div>';
-        
-        const audioSection = document.querySelector('.native-audio-section');
-        if (audioSection) {
-            const existingTips = audioSection.querySelector('.pronunciation-tips');
-            if (existingTips) existingTips.remove();
+        try {
+            this.container = targetElement;
             
-            audioSection.insertAdjacentHTML('beforeend', tips);
+            // تولید HTML
+            const htmlContent = this.getHtml();
+            
+            if (!htmlContent || htmlContent.length < 100) {
+                console.error("❌ Generated HTML is too short or empty");
+                return;
+            }
+
+            // تزریق HTML
+            this.container.innerHTML = htmlContent;
+            
+            // اطمینان از رندر شدن کامل DOM
+            requestAnimationFrame(() => {
+                this.attachEventListeners();
+                this.drawStaticVisualizer();
+                console.log("✅ Speaking section rendered successfully");
+            });
+
+        } catch (error) {
+            console.error("❌ Error in Speaking.render:", error);
+            
+            // نمایش پیام خطا در صفحه
+            if (this.container) {
+                this.container.innerHTML = `
+                    <div class="speaking-container">
+                        <div class="error-message">
+                            <h2>❌ خطا در بارگذاری</h2>
+                            <p>${error.message}</p>
+                            <button onclick="location.reload()" class="glass-btn">
+                                <i class="fas fa-redo"></i> تلاش مجدد
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
         }
     }
 
-    retryExercise() {
-        console.log("🔄 Retrying exercise");
-        if (this.state.currentExercise) {
-            this.startExercise(this.state.currentExercise.id);
+    attachEventListeners() {
+        if (!this.container) {
+            console.warn("⚠️ Cannot attach events: container is null");
+            return;
+        }
+
+        console.log("🔗 Attaching event listeners...");
+
+        // 🏠 Home Button
+        const homeBtn = this.container.querySelector('#home-btn');
+        if (homeBtn) {
+            homeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log("🏠 Home button clicked");
+                this.cleanup();
+                
+                if (this.app && typeof this.app.goToHome === 'function') {
+                    this.app.goToHome();
+                }
+            });
+        }
+
+        // 🎚️ Level Select
+        const levelSelect = this.container.querySelector('#level-select');
+        if (levelSelect) {
+            levelSelect.addEventListener('change', (e) => this.changeLevel(e.target.value));
+        }
+
+        // 🔊 Play Native
+        const playBtn = this.container.querySelector('#play-native-btn');
+        if (playBtn) {
+            playBtn.addEventListener('click', () => {
+                if (this.currentExercise) {
+                    this.playSmartAudio(this.currentExercise.text, this.currentExercise.id);
+                }
+            });
+        }
+
+        // 🎤 Record Toggle
+        const recordBtn = this.container.querySelector('#record-toggle-btn');
+        if (recordBtn) {
+            recordBtn.addEventListener('click', () => {
+                if (this.isRecording) {
+                    this.stopRecording();
+                } else {
+                    this.startRecording();
+                }
+            });
+        }
+
+        // 🔄 Try Again
+        const tryAgainBtn = this.container.querySelector('#try-again-btn');
+        if (tryAgainBtn) {
+            tryAgainBtn.addEventListener('click', () => this.resetForRetry());
+        }
+
+        // ➡️ Next
+        const nextBtn = this.container.querySelector('#next-btn');
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                this.nextExercise();
+                this.hideResultPanel();
+            });
+        }
+
+        console.log("✅ All event listeners attached");
+    }
+
+    changeLevel(newLevel) {
+        console.log(`📊 Changing level to: ${newLevel}`);
+        this.currentLevel = newLevel;
+        
+        const levelData = this.exercises[newLevel];
+        if (levelData && levelData.length > 0) {
+            this.currentExercise = levelData[0];
+            
+            if (this.container) {
+                this.render(this.container);
+                this.preloadAudioFiles(levelData);
+            }
         }
     }
 
     nextExercise() {
-        console.log("➡️ Moving to next exercise");
+        const levelData = this.exercises[this.currentLevel];
+        if (!levelData || levelData.length === 0) return;
         
-        const currentExercises = this.exercises[this.state.currentLevel] || [];
-        if (!this.state.currentExercise) return;
+        const currentIndex = levelData.findIndex(ex => ex.id === this.currentExercise?.id);
+        const nextIndex = (currentIndex + 1) % levelData.length;
         
-        const currentIndex = currentExercises.findIndex(ex => ex.id === this.state.currentExercise.id);
-        const nextIndex = (currentIndex + 1) % currentExercises.length;
+        this.currentExercise = levelData[nextIndex];
         
-        this.startExercise(currentExercises[nextIndex].id);
-    }
-
-    backToMenu() {
-        console.log("🏠 Back to menu");
-        
-        this.stopCurrentAudio();
-        this.stopRecording();
-        this.state.currentExercise = null;
-        
-        let container = this.container || 
-                       document.getElementById('speaking-container') ||
-                       document.getElementById('section-container');
-        
-        if (container) {
-            container.innerHTML = this.render();
-            this.bindEvents(container);
+        if (this.container) {
+            this.render(this.container);
         }
+        
+        this.showNotification('✅ تمرین بعدی بارگذاری شد', 'success');
     }
 
-    // --- مدیریت پیشرفت کاربر ---
-    
-    saveUserProgress() {
-        try {
-            const progress = {
-                score: this.state.score,
-                streak: this.state.streak,
-                exercisesCompleted: this.state.exercisesCompleted,
-                lastPractice: new Date().toISOString()
-            };
-            
-            localStorage.setItem('speaking_progress', JSON.stringify(progress));
-            console.log("💾 Speaking progress saved");
-        } catch (error) {
-            console.error("❌ Error saving progress:", error);
-        }
+    resetForRetry() {
+        this.finalTranscript = '';
+        this.hideResultPanel();
+        this.showNotification('🔄 آماده برای تلاش مجدد', 'info');
     }
 
-    loadUserProgress() {
-        try {
-            const saved = localStorage.getItem('speaking_progress');
-            if (saved) {
-                const progress = JSON.parse(saved);
-                this.state.score = progress.score || 0;
-                this.state.streak = progress.streak || 0;
-                this.state.exercisesCompleted = progress.exercisesCompleted || 0;
-                
-                this.checkDailyStreak(progress.lastPractice);
-                
-                console.log("📊 Speaking progress loaded");
+    updateUiState(recording) {
+        const recordBtn = this.container?.querySelector('#record-toggle-btn');
+        const statusText = this.container?.querySelector('#status-text');
+        
+        if (recordBtn) {
+            if (recording) {
+                recordBtn.classList.add('recording');
+                recordBtn.innerHTML = '<i class="fas fa-stop"></i>';
+            } else {
+                recordBtn.classList.remove('recording');
+                recordBtn.innerHTML = '<i class="fas fa-microphone"></i>';
             }
-        } catch (error) {
-            console.error("❌ Error loading progress:", error);
+        }
+        
+        if (statusText && !recording) {
+            statusText.textContent = '⏹️ در حال تحلیل...';
         }
     }
 
-    checkDailyStreak(lastPracticeDate) {
-        if (!lastPracticeDate) return;
+    showResultPanel(score, spokenText, feedback, detailedAnalysis) {
+        const panel = this.container?.querySelector('#result-panel');
+        if (!panel) return;
         
-        const lastDate = new Date(lastPracticeDate);
-        const today = new Date();
+        panel.classList.remove('hidden');
         
-        const diffDays = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
+        // Score Circle Animation
+        const scoreCircle = this.container.querySelector('#score-circle');
+        if (scoreCircle) {
+            const circumference = 2 * Math.PI * 45;
+            const offset = circumference - (score / 100) * circumference;
+            scoreCircle.style.strokeDashoffset = offset;
+            
+            // رنگ بر اساس نمره
+            if (score >= 85) {
+                scoreCircle.style.stroke = '#10b981';
+            } else if (score >= 70) {
+                scoreCircle.style.stroke = '#f59e0b';
+            } else {
+                scoreCircle.style.stroke = '#ef4444';
+            }
+        }
         
-        if (diffDays > 1) {
-            this.state.streak = 0;
-            console.log("📉 Streak reset due to inactivity");
+        // Score Text
+        const scoreVal = this.container.querySelector('#score-val');
+        if (scoreVal) {
+            scoreVal.textContent = `${score}%`;
+        }
+        
+        // Feedback
+        const feedbackMsg = this.container.querySelector('#feedback-msg');
+        if (feedbackMsg) {
+            feedbackMsg.innerHTML = feedback;
+        }
+        
+        // Spoken Text
+        const spokenVal = this.container.querySelector('#spoken-val');
+        if (spokenVal) {
+            spokenVal.textContent = spokenText;
+        }
+        
+        // Detailed Analysis
+        const analysisDiv = this.container.querySelector('#detailed-analysis');
+        if (analysisDiv) {
+            analysisDiv.innerHTML = detailedAnalysis;
         }
     }
-    
-    // ============ متدهای تحلیل تلفظ (پیاده‌سازی پایه) ============
-    
-    checkPronunciationAccuracy(audioData) {
-        // در نسخه واقعی، اینجا از Web Audio API برای تحلیل فرکانس‌ها استفاده می‌شود
-        return Math.floor(Math.random() * 30) + 60; // شبیه‌سازی
-    }
-    
-    checkTiming(audioData) {
-        // تحلیل سرعت و زمان‌بندی
-        return Math.floor(Math.random() * 30) + 65;
-    }
-    
-    checkVolumeConsistency(audioData) {
-        // تحلیل یکنواختی صدا
-        return Math.floor(Math.random() * 30) + 70;
-    }
-    
-    checkClarity(audioData) {
-        // تحلیل وضوح گفتار
-        return Math.floor(Math.random() * 30) + 65;
-    }
-}
 
-if (typeof window !== 'undefined') {
-    window.SpeakingModule = Speaking;
+    hideResultPanel() {
+        const panel = this.container?.querySelector('#result-panel');
+        if (panel) {
+            panel.classList.add('hidden');
+        }
+    }
+
+    showNotification(message, type = 'info') {
+        console.log(`📢 ${type.toUpperCase()}: ${message}`);
+        
+        if (this.app && typeof this.app.showNotification === 'function') {
+            this.app.showNotification(message, type);
+        } else {
+            // Fallback notification
+            alert(`${type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️'} ${message}`);
+        }
+    }
+
+    // ==========================================
+    // 🎨 Audio Visualizer
+    // ==========================================
+    drawVisualizer() {
+        if (!this.analyser || !this.dataArray) return;
+        
+        const canvas = this.container?.querySelector('#visualizer-canvas');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        const draw = () => {
+            if (!this.isRecording) {
+                this.drawStaticVisualizer();
+                return;
+            }
+            
+            this.animationId = requestAnimationFrame(draw);
+            
+            this.analyser.getByteFrequencyData(this.dataArray);
+            
+            ctx.fillStyle = 'rgba(17, 24, 39, 0.2)';
+            ctx.fillRect(0, 0, width, height);
+            
+            const barWidth = (width / this.dataArray.length) * 2.5;
+            let x = 0;
+            
+            for (let i = 0; i < this.dataArray.length; i++) {
+                const barHeight = (this.dataArray[i] / 255) * height * 0.8;
+                
+                const gradient = ctx.createLinearGradient(0, height, 0, height - barHeight);
+                gradient.addColorStop(0, 'rgba(99, 102, 241, 0.8)');
+                gradient.addColorStop(1, 'rgba(139, 92, 246, 0.8)');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x, height - barHeight, barWidth - 2, barHeight);
+                
+                x += barWidth;
+            }
+        };
+        
+        draw();
+    }
+
+    drawStaticVisualizer() {
+        const canvas = this.container?.querySelector('#visualizer-canvas');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        ctx.fillStyle = 'rgba(99, 102, 241, 0.1)';
+        ctx.fillRect(0, 0, width, height);
+        
+        ctx.strokeStyle = 'rgba(99, 102, 241, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, height / 2);
+        ctx.lineTo(width, height / 2);
+        ctx.stroke();
+    }
+
+    // ==========================================
+    // 🧹 Cleanup
+    // ==========================================
+    cleanup() {
+        console.log("🧹 Speaking cleanup started...");
+        
+        // 1. توقف ضبط
+        if (this.isRecording) {
+            this.stopRecording();
+        }
+        
+        // 2. توقف صداها
+        this.stopAudioOnly();
+        
+        // 3. پاکسازی Audio Context
+        if (this.audioContext) {
+            try {
+                this.audioContext.close();
+            } catch (e) {
+                console.warn("AudioContext close error:", e);
+            }
+            this.audioContext = null;
+        }
+        
+        // 4. پاکسازی Media Stream
+        if (this.mediaStream) {
+            this.mediaStream.getTracks().forEach(track => track.stop());
+            this.mediaStream = null;
+        }
+        
+        // 5. لغو انیمیشن
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+        }
+        
+        console.log("✅ Speaking cleanup completed");
+    }
+
+    destroy() {
+        console.log("🗑️ Speaking module destroyed");
+        this.cleanup();
+        this.container = null;
+    }
 }

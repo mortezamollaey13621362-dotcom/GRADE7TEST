@@ -1,248 +1,457 @@
-// js/modules/Review.js
-import { UI } from '../utils/UI.js';
-
-export class Review {
-    constructor(lessonManager) {
-        this.lessonManager = lessonManager;
-        this.data = null;
-        this.lessonId = null;
-        this.activeTab = null; 
+// js/modules/Review.js - نسخه اصلاح شده با question/answer
+export default class Review {
+    constructor(app, containerEl) {
+        this.app = app;
+        this.containerEl = containerEl;
+        
+        this.session = {
+            lessonId: null,
+            cards: [],
+            dueCards: [],
+            currentIndex: 0,
+            showingAnswer: false,
+            stats: {
+                reviewed: 0,
+                correct: 0,
+                incorrect: 0
+            }
+        };
+        
+        this.elements = {};
+        
+        console.log('🎯 Review System Initialized');
     }
-
-    /**
-     * بارگذاری داده‌های مرور از فایل JSON
-     */
+    
+    // ============ Core Methods ============
+    
     async loadData(lessonId) {
-        this.lessonId = lessonId;
-        this.data = null;
+        console.log(`📚 Loading lesson ${lessonId}...`);
         
         try {
-            const response = await fetch(`data/lesson${lessonId}/review.json`);
+            this.session.lessonId = lessonId;
             
-            if (!response.ok) {
-                console.warn(`Review data not found for lesson ${lessonId}`);
-                return;
+            // بارگذاری از JSON
+            const jsonUrl = `./data/lesson${lessonId}/review.json`;
+            console.log(`🔗 Fetching from: ${jsonUrl}`);
+            
+            const response = await fetch(jsonUrl);
+            
+            if (response.ok) {
+                const jsonData = await response.json();
+                console.log('✅ JSON file loaded successfully');
+                console.log('📊 JSON data structure:', {
+                    hasCards: !!jsonData.cards,
+                    cardCount: jsonData.cards?.length,
+                    firstCard: jsonData.cards?.[0]
+                });
+                
+                // **تبدیل صحیح JSON به کارت‌ها**
+                this.session.cards = this.convertJsonToCards(jsonData);
+                console.log(`🔄 Converted to ${this.session.cards.length} system cards`);
+                
+            } else {
+                console.warn('⚠️ JSON file not found, using sample cards');
+                this.session.cards = this.createSampleCards();
             }
             
-            this.data = await response.json();
+            // محاسبه کارت‌های due
+            this.calculateDueCards();
             
-            // انتخاب تب اول به عنوان پیش‌فرض
-            if (this.data && this.data.tabs && this.data.tabs.length > 0) {
-                this.activeTab = this.data.tabs[0].id;
+            console.log(`✅ Final: ${this.session.cards.length} cards, ${this.session.dueCards.length} due`);
+            
+            // نمایش در کنسول برای دیباگ
+            if (this.session.cards.length > 0) {
+                console.log('📋 Sample converted card:', this.session.cards[0]);
             }
+            
+            return true;
             
         } catch (error) {
-            console.error('Error loading review data:', error);
-            UI.showError('خطا در بارگذاری بخش مرور');
+            console.error('❌ Error in loadData:', error);
+            
+            // حالت fallback
+            this.session.cards = this.createSampleCards();
+            this.calculateDueCards();
+            
+            return false;
         }
     }
-
-    /**
-     * تولید HTML برای نمایش در صفحه
-     */
-    getHtml() {
-        if (!this.data || !this.data.tabs) {
-            return `
-                <div class="review-empty-state" style="text-align: center; padding: 40px; color: #b2bec3;">
-                    <div class="text-center p-5">
-                        <i class="fas fa-clipboard-list fa-3x mb-3 text-muted"></i>
-                        <p>محتوای مرور برای این درس هنوز آماده نشده است.</p>
-                    </div>
-                </div>
-            `;
+    
+    // **تابع جدید برای تبدیل صحیح JSON با question/answer**
+    convertJsonToCards(jsonData) {
+        const today = new Date().toISOString().split('T')[0];
+        
+        if (!jsonData.cards || !Array.isArray(jsonData.cards)) {
+            console.warn('❌ No cards array in JSON data');
+            return this.createSampleCards();
         }
-
-        // ساخت نوار تب‌ها
-        const tabsHeader = this.data.tabs.map(tab => `
-            <button class="review-tab-btn ${tab.id === this.activeTab ? 'active' : ''}" 
-                    data-tab="${tab.id}">
-                <i class="${this.getTabIcon(tab.id)}"></i>
-                <span>${tab.title}</span>
-            </button>
-        `).join('');
-
-        // یافتن دیتای تب فعال
-        const activeTabData = this.data.tabs.find(t => t.id === this.activeTab);
-        const contentHtml = activeTabData ? this.renderTabContent(activeTabData) : '';
-
+        
+        return jsonData.cards.map((card, index) => {
+            // دیباگ: نمایش ساختار کارت
+            console.log(`🔄 Converting card ${index + 1}:`, {
+                id: card.id,
+                word: card.word,
+                translation: card.translation,
+                hasLeitner: !!card.leitner
+            });
+            
+            // ✨ ساختار کارت نهایی با question/answer
+            return {
+                id: card.id || `card-${Date.now()}-${index}`,
+                question: card.word || card.question || card.front || 'کلمه',
+                answer: card.translation || card.answer || card.back || 'ترجمه',
+                example: card.example || '',
+                phonetic: card.phonetic || '',
+                category: card.category || 'general',
+                box: card.leitner?.box || card.box || 1,
+                nextReview: card.leitner?.nextReview || card.nextReview || today,
+                due: card.leitner?.due !== undefined ? card.leitner.due : 
+                     card.due !== undefined ? card.due : true,
+                isNew: card.leitner?.isNew || card.isNew || true,
+                stats: {
+                    totalReviews: 0,
+                    correct: 0,
+                    wrong: 0
+                }
+            };
+        });
+    }
+    
+    createSampleCards() {
+        const today = new Date().toISOString().split('T')[0];
+        
+        return [
+            {
+                id: "sample_1",
+                question: "Hello",
+                answer: "سلام",
+                example: "Hello everyone!",
+                box: 1,
+                nextReview: today,
+                due: true,
+                isNew: true,
+                stats: { totalReviews: 0, correct: 0, wrong: 0 }
+            },
+            {
+                id: "sample_2", 
+                question: "Goodbye",
+                answer: "خداحافظ",
+                example: "Goodbye my friend!",
+                box: 1,
+                nextReview: today,
+                due: true,
+                isNew: true,
+                stats: { totalReviews: 0, correct: 0, wrong: 0 }
+            }
+        ];
+    }
+    
+    calculateDueCards() {
+        const today = new Date().toISOString().split('T')[0];
+        
+        this.session.dueCards = this.session.cards.filter(card => {
+            // کارت‌هایی که due هستند
+            if (card.due === true) return true;
+            
+            // یا تاریخ مرورشان رسیده
+            if (card.nextReview && card.nextReview <= today) return true;
+            
+            return false;
+        });
+        
+        console.log(`📅 Due cards calculation:`);
+        console.log(`- Total cards: ${this.session.cards.length}`);
+        console.log(`- Due cards: ${this.session.dueCards.length}`);
+        
+        if (this.session.dueCards.length > 0) {
+            console.log(`- First due card:`, this.session.dueCards[0]);
+        }
+        
+        this.session.currentIndex = 0;
+        this.session.showingAnswer = false;
+    }
+    
+    // ============ UI Methods ============
+    
+    getHtml() {
+        const stats = this.session.stats;
+        const hasCards = this.session.dueCards.length > 0;
+        const currentCard = hasCards ? this.session.dueCards[0] : null;
+        
+        const accuracy = this.calculateSessionAccuracy();
+        
         return `
-            <div class="review-container animate-fade-in">
+            <div class="review-container">
+                <!-- Header -->
                 <div class="review-header">
-                    <h3><i class="fas fa-redo me-2"></i>مرور و تمرین</h3>
+                    <h3><i class="fas fa-redo"></i> سیستم مرور لایتنر</h3>
+                    <div class="stats" id="reviewStats">
+                        <div class="stat-item">
+                            <span>امروز:</span>
+                            <strong id="todayCount">${this.session.dueCards.length}</strong>
+                        </div>
+                        <div class="stat-item">
+                            <span>مرور شده:</span>
+                            <strong id="reviewedCount">${stats.reviewed || 0}</strong>
+                        </div>
+                        <div class="stat-item">
+                            <span>دقت:</span>
+                            <strong id="accuracy">${accuracy}%</strong>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="review-tabs-wrapper">
-                    <div class="review-tabs">
-                        ${tabsHeader}
+                <!-- Progress -->
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">۰ از ${this.session.dueCards.length}</div>
+                </div>
+                
+                ${hasCards ? `
+                <!-- Card -->
+                <div class="review-card" id="reviewCard">
+                    <div class="card-box" id="cardBox">
+                        📝 جعبه ${currentCard.box || 1}
+                    </div>
+                    
+                    <div class="card-content">
+                        <div class="card-front" id="cardFront">
+                            <h2 id="cardWord">${currentCard.question}</h2>
+                            ${currentCard.phonetic ? `<div class="phonetic">${currentCard.phonetic}</div>` : ''}
+                        </div>
+                        
+                        <div class="card-back" id="cardBack" style="display: none;">
+                            <div class="translation" id="cardTranslation">${currentCard.answer}</div>
+                            ${currentCard.example ? `<div class="example">${currentCard.example}</div>` : ''}
+                            <div class="card-stats">
+                                <span>مرور: ${currentCard.stats?.totalReviews || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-actions">
+                        <button class="btn-show" id="showAnswerBtn">
+                            <i class="fas fa-eye"></i> نمایش پاسخ
+                        </button>
+                        
+                        <div class="answer-buttons" id="answerButtons" style="display: none;">
+                            <button class="btn-wrong" id="wrongBtn">
+                                <i class="fas fa-times"></i> نمی‌دانم
+                            </button>
+                            <button class="btn-correct" id="correctBtn">
+                                <i class="fas fa-check"></i> می‌دانم
+                            </button>
+                        </div>
                     </div>
                 </div>
-
-                <div class="review-content-area" id="review-content-area">
-                    ${contentHtml}
+                ` : `
+                <!-- No Cards -->
+                <div class="no-cards">
+                    <div class="no-cards-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3>آفرین!</h3>
+                    <p>هیچ کارتی برای مرور امروز ندارید.</p>
+                    <p class="next-review">مرور بعدی: فردا</p>
                 </div>
+                `}
             </div>
         `;
     }
-
-    /**
-     * اتصال رویدادها پس از رندر شدن HTML
-     */
+    
+    calculateSessionAccuracy() {
+        const stats = this.session.stats;
+        if (!stats.reviewed || stats.reviewed === 0) return 0;
+        return Math.round((stats.correct / stats.reviewed) * 100);
+    }
+    
     bindEvents() {
-        const container = document.querySelector('.review-container');
-        if (!container) return;
-
-        // رویداد کلیک روی تب‌ها
-        const tabButtons = container.querySelectorAll('.review-tab-btn');
-        tabButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                // پیدا کردن دکمه (چون ممکن است روی آیکون کلیک شده باشد)
-                const targetBtn = e.target.closest('.review-tab-btn');
-                if(targetBtn) {
-                    const tabId = targetBtn.dataset.tab;
-                    this.switchTab(tabId);
-                }
-            });
-        });
-
-        // بایند کردن رویدادهای مخصوص محتوا
-        this.bindTabSpecificEvents(container);
+        console.log('🔗 Binding review events...');
+        
+        setTimeout(() => {
+            this.elements = {
+                showAnswerBtn: document.getElementById('showAnswerBtn'),
+                wrongBtn: document.getElementById('wrongBtn'),
+                correctBtn: document.getElementById('correctBtn'),
+                cardBack: document.getElementById('cardBack'),
+                answerButtons: document.getElementById('answerButtons')
+            };
+            
+            console.log('🔍 Elements found:', Object.keys(this.elements).filter(k => this.elements[k]));
+            
+            if (this.elements.showAnswerBtn) {
+                this.elements.showAnswerBtn.onclick = () => this.showAnswer();
+            }
+            
+            if (this.elements.wrongBtn) {
+                this.elements.wrongBtn.onclick = () => this.answer(false);
+            }
+            
+            if (this.elements.correctBtn) {
+                this.elements.correctBtn.onclick = () => this.answer(true);
+            }
+            
+            this.updateStatsDisplay();
+            this.updateProgressBar();
+            
+            console.log('✅ Events bound successfully');
+        }, 100);
     }
-
-    // --- توابع داخلی و کمکی ---
-
-    switchTab(tabId) {
-        this.activeTab = tabId;
+    
+    showAnswer() {
+        console.log('🎯 Showing answer');
         
-        // بروزرسانی کلاس active دکمه‌ها
-        document.querySelectorAll('.review-tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tabId);
-        });
-
-        // رندر مجدد محتوا
-        const activeTabData = this.data.tabs.find(t => t.id === tabId);
-        const contentArea = document.getElementById('review-content-area');
-        
-        if (contentArea && activeTabData) {
-            // افکت محو شدن و ظاهر شدن
-            contentArea.style.opacity = '0';
-            setTimeout(() => {
-                contentArea.innerHTML = this.renderTabContent(activeTabData);
-                contentArea.style.opacity = '1';
-                this.bindTabSpecificEvents(document.querySelector('.review-container'));
-            }, 150);
+        if (this.elements.cardBack) {
+            this.elements.cardBack.style.display = 'block';
         }
+        
+        if (this.elements.showAnswerBtn) {
+            this.elements.showAnswerBtn.style.display = 'none';
+        }
+        
+        if (this.elements.answerButtons) {
+            this.elements.answerButtons.style.display = 'flex';
+        }
+        
+        this.session.showingAnswer = true;
     }
-
-    renderTabContent(tabData) {
-        // این بخش هوشمند شده تا هر نوع دیتایی را نشان دهد
-        // حتی اگر ID آن را نشناسد، محتوای متنی آن را چاپ می‌کند
+    
+    answer(isCorrect) {
+        console.log(`📝 Answer: ${isCorrect ? 'Correct' : 'Wrong'}`);
         
-        // تشخیص بر اساس IDهای رایج
-        const id = tabData.id.toLowerCase();
-
-        if (id.includes('warmup') || id.includes('part1')) {
-            return `
-                <div class="tab-pane-content">
-                    <h4 class="text-primary mb-3">🔥 ${tabData.title}</h4>
-                    <div class="p-3 bg-light rounded border">${this.formatContent(tabData.content)}</div>
-                </div>`;
+        if (this.session.currentIndex >= this.session.dueCards.length) {
+            return;
         }
         
-        if (id.includes('structure') || id.includes('grammar') || id.includes('part2')) {
-            return `
-                <div class="tab-pane-content">
-                    <h4 class="text-success mb-3">🏗️ ${tabData.title}</h4>
-                    <div class="p-3 bg-white rounded shadow-sm border">${this.formatContent(tabData.content)}</div>
-                </div>`;
+        const card = this.session.dueCards[this.session.currentIndex];
+        
+        // Update stats
+        if (!card.stats) card.stats = { totalReviews: 0, correct: 0, wrong: 0 };
+        card.stats.totalReviews++;
+        
+        if (isCorrect) {
+            card.stats.correct++;
+            this.session.stats.correct++;
+            if (card.box < 5) card.box++;
+        } else {
+            card.stats.wrong++;
+            this.session.stats.incorrect++;
+            card.box = 1;
         }
-
-        if (id.includes('comprehension') || id.includes('reading') || id.includes('part3')) {
-            return `
-                <div class="tab-pane-content">
-                    <h4 class="text-info mb-3">🧠 ${tabData.title}</h4>
-                    <div class="p-3 bg-light rounded">${this.formatContent(tabData.content)}</div>
-                </div>`;
+        
+        // Calculate next review
+        const intervals = [0, 1, 3, 7, 15];
+        const days = intervals[card.box - 1] || 1;
+        
+        const nextDate = new Date();
+        nextDate.setDate(nextDate.getDate() + days);
+        card.nextReview = nextDate.toISOString().split('T')[0];
+        card.due = false;
+        
+        // Update session
+        this.session.stats.reviewed++;
+        this.session.currentIndex++;
+        
+        // Update UI
+        if (this.session.currentIndex < this.session.dueCards.length) {
+            this.showCurrentCard();
+        } else {
+            this.showSessionComplete();
         }
-
-        if (id.includes('mastery') || id.includes('practice') || id.includes('part4')) {
-             return `
-                <div class="tab-pane-content">
-                    <h4 class="text-warning mb-3">🏆 ${tabData.title}</h4>
-                    <div class="p-3 bg-white rounded border border-warning">${this.formatContent(tabData.content)}</div>
-                </div>`;
+        
+        this.updateStatsDisplay();
+    }
+    
+    showCurrentCard() {
+        if (this.session.currentIndex >= this.session.dueCards.length) {
+            this.showSessionComplete();
+            return;
         }
-
-        // حالت‌های خاص قدیمی
-        if (id === 'scramble') return this.renderScramble(tabData.content);
-        if (id === 'dictation') return this.renderDictation(tabData.content);
-
-        // *** حالت پیش‌فرض عمومی (برای رفع ارور "یافت نشد") ***
-        // اگر هیچکدام نبود، محتوا را خام نشان بده
-        return `
-            <div class="tab-pane-content">
-                <h4>📌 ${tabData.title}</h4>
-                <div class="generic-content">
-                    ${this.formatContent(tabData.content)}
+        
+        const card = this.session.dueCards[this.session.currentIndex];
+        
+        if (this.elements.cardWord) {
+            this.elements.cardWord.textContent = card.question;
+        }
+        
+        if (this.elements.cardTranslation) {
+            this.elements.cardTranslation.textContent = card.answer;
+        }
+        
+        // Reset display
+        if (this.elements.cardBack) {
+            this.elements.cardBack.style.display = 'none';
+        }
+        
+        if (this.elements.showAnswerBtn) {
+            this.elements.showAnswerBtn.style.display = 'block';
+        }
+        
+        if (this.elements.answerButtons) {
+            this.elements.answerButtons.style.display = 'none';
+        }
+        
+        this.updateProgressBar();
+    }
+    
+    showSessionComplete() {
+        console.log('🏁 Session complete');
+        
+        const accuracy = this.calculateSessionAccuracy();
+        const completeHTML = `
+            <div class="session-complete">
+                <div class="complete-icon">
+                    <i class="fas fa-trophy"></i>
                 </div>
-            </div>`;
-    }
-
-    // یک تابع کمکی برای اینکه اگر محتوا آبجکت بود خراب نشود
-    formatContent(content) {
-        if (typeof content === 'string') return content;
-        if (Array.isArray(content)) return content.join('<br>');
-        if (typeof content === 'object') return JSON.stringify(content, null, 2);
-        return content;
-    }
-
-    bindTabSpecificEvents(container) {
-        // اتصال دکمه‌های صوتی اگر وجود داشته باشند
-        container.querySelectorAll('.play-audio-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const text = e.currentTarget.dataset.text;
-                if(text && window.app && window.app.audioManager) {
-                    window.app.audioManager.playText(text);
-                }
-            });
-        });
-
-        // دکمه‌های اسکرامبل
-        const checkScrambleBtn = container.querySelector('#check-scramble-btn');
-        if (checkScrambleBtn) {
-            checkScrambleBtn.addEventListener('click', () => this.checkScrambleAnswer());
-        }
-    }
-
-    getTabIcon(id) {
-        // نگاشت آیکون‌ها بر اساس نام تب‌ها
-        const lowerId = id.toLowerCase();
-        
-        if (lowerId.includes('warmup') || lowerId.includes('part1')) return 'fas fa-fire';
-        if (lowerId.includes('structure') || lowerId.includes('grammar')) return 'fas fa-layer-group';
-        if (lowerId.includes('comprehension') || lowerId.includes('reading')) return 'fas fa-brain';
-        if (lowerId.includes('mastery') || lowerId.includes('part4')) return 'fas fa-trophy';
-        
-        if (lowerId.includes('scramble')) return 'fas fa-random';
-        if (lowerId.includes('dictation')) return 'fas fa-pen-alt';
-        if (lowerId.includes('chat')) return 'fas fa-comments';
-        if (lowerId.includes('quiz')) return 'fas fa-question-circle';
-
-        return 'fas fa-star'; // آیکون پیش‌فرض
-    }
-
-    // --- رندرهای خاص ---
-    renderScramble(content) {
-        return `
-            <div class="tab-pane-content scramble-section">
-                <h4>مرتب‌سازی جملات</h4>
-                <div class="scramble-area text-muted p-3 border rounded">
-                   ${this.formatContent(content)}
+                <h3>جلسه تکمیل شد!</h3>
+                <div class="complete-stats">
+                    <div class="stat-row">
+                        <div class="stat-col">
+                            <span class="stat-number">${this.session.stats.reviewed}</span>
+                            <span class="stat-label">کارت مرور شده</span>
+                        </div>
+                        <div class="stat-col">
+                            <span class="stat-number">${accuracy}%</span>
+                            <span class="stat-label">دقت</span>
+                        </div>
+                    </div>
                 </div>
+                <button class="btn-restart" id="restartBtn" onclick="location.reload()">
+                    <i class="fas fa-redo"></i> شروع مجدد
+                </button>
             </div>
         `;
+        
+        const container = document.querySelector('.review-container');
+        if (container) {
+            container.innerHTML = completeHTML;
+        }
     }
+    
+    updateStatsDisplay() {
+        const reviewedCount = document.getElementById('reviewedCount');
+        const accuracy = document.getElementById('accuracy');
+        
+        if (reviewedCount) reviewedCount.textContent = this.session.stats.reviewed;
+        if (accuracy) accuracy.textContent = `${this.calculateSessionAccuracy()}%`;
+    }
+    
+    updateProgressBar() {
+        const total = this.session.dueCards.length;
+        const current = this.session.currentIndex;
+        const progress = total > 0 ? Math.round((current / total) * 100) : 0;
+        
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        
+        if (progressFill) progressFill.style.width = `${progress}%`;
+        if (progressText) progressText.textContent = `${current} از ${total}`;
+    }
+}
 
-    renderDictation(content) {
-        return `<div class="tab-pane-content"><h4>دیکته و نوشتن</h4><p>${this.formatContent(content)}</p></div>`;
-    }
+// Global access
+if (typeof window !== 'undefined') {
+    window.Review = Review;
 }

@@ -6,7 +6,8 @@
     <title>English 7 App - پایه هفتم</title>
     
     <!-- فونت‌ها و آیکون‌ها -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
+
     
     <!-- استایل‌های پایه -->
     <link rel="stylesheet" href="css/style.css">
@@ -16,9 +17,9 @@
     <link rel="stylesheet" href="css/grammar.css">
     <link rel="stylesheet" href="css/conversation.css">
     <link rel="stylesheet" href="css/listening.css">
-    <link rel="stylesheet" href="css/review.css"> 
-    <link rel="stylesheet" href="css/games.css">
     <link rel="stylesheet" href="css/speaking.css">
+    <link rel="stylesheet" href="css/games.css">
+    <link rel="stylesheet" href="css/review.css">
     <!-- استایل آزمون -->
     <link rel="stylesheet" href="css/quiz.css">
 
@@ -61,6 +62,101 @@
             height: 200px;
             font-size: 1.2rem;
             color: var(--primary-color);
+        }
+        
+        /* ✅ استایل اضافی برای review-section */
+        .review-section {
+            width: 100%;
+            min-height: 400px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-top: 20px;
+        }
+        
+        body.dark-mode .review-section {
+            background: #2d3436;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        /* ✅ استایل برای speaking-section */
+        .speaking-section {
+            width: 100%;
+            min-height: 400px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-top: 20px;
+        }
+        
+        body.dark-mode .speaking-section {
+            background: #2d3436;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        /* ✅ استایل برای modal و notification */
+        .modal-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); z-index: 9999; 
+            display: flex; justify-content: center; align-items: center; 
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            max-width: 90%;
+            width: 400px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        body.dark-mode .modal-content {
+            background: #2d3436;
+            color: #dfe6e9;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        body.dark-mode .modal-header {
+            border-bottom-color: #495057;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .close-modal-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6c757d;
+            transition: color 0.2s;
+        }
+
+        .close-modal-btn:hover {
+            color: #dc3545;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
@@ -116,7 +212,7 @@
                         <i class="fas fa-info-circle"></i>
                         درباره
                     </button>
-                    <button class="action-btn" onclick="resetProgress()">
+                    <button class="action-btn" onclick="app.resetProgress()">
                         <i class="fas fa-redo"></i>
                         بازنشانی
                     </button>
@@ -168,31 +264,31 @@
                     <div class="nav-buttons-wrapper">
                         <div class="nav-buttons" id="sections-list">
                             <button class="nav-btn" data-section="vocab">
-                                <i class="fas fa-book"></i> واژگان
+                                <i class="fas fa-book"></i> (Vocabulary)واژگان
                             </button>
                             <button class="nav-btn" data-section="grammar">
-                                <i class="fas fa-pen-nib"></i> گرامر
+                                <i class="fas fa-pen-nib"></i> (Grammar)گرامر
                             </button>
                             <button class="nav-btn" data-section="conversation">
-                                <i class="fas fa-comments"></i> مکالمه
+                                <i class="fas fa-comments"></i> (Conversation)مکالمه
                             </button>
                             <button class="nav-btn" data-section="speaking">
-                                <i class="fas fa-microphone"></i> گفتار
+                                <i class="fas fa-microphone"></i> (Speaking)گفتار
                             </button>
                             <button class="nav-btn" data-section="listening">
-                                <i class="fas fa-headphones"></i> شنیدار
+                                <i class="fas fa-headphones"></i> (Listening)شنیدار
                             </button>
                             <button class="nav-btn" data-section="review">
-                                <i class="fas fa-redo"></i> مرور
+                                <i class="fas fa-redo"></i> (Review&Leitner System)مرور
                             </button>
                             <button class="nav-btn" data-section="quiz">
-                                <i class="fas fa-clipboard-list"></i> آزمون
+                                <i class="fas fa-clipboard-list"></i> (Quiz)آزمون
                             </button>
                             <button class="nav-btn" data-section="games">
-                                <i class="fas fa-gamepad"></i> بازی
+                                <i class="fas fa-gamepad"></i> (Games)بازی
                             </button>
                             <button class="nav-btn" data-section="flashcard">
-                                <i class="fas fa-layer-group"></i> فلش‌کارت
+                                <i class="fas fa-layer-group"></i> (Flashcards)فلش‌کارت
                             </button>
                         </div>
                     </div>
@@ -203,7 +299,7 @@
                     
                     <!-- پیام پیش‌فرض -->
                     <div id="default-message" class="app-loader">یکی از بخش‌های بالا را انتخاب کنید...</div>
-
+                    
                     <!-- =========================================
                          بخش HTML ماژول آزمون (Quiz)
                     ========================================= -->
@@ -269,6 +365,16 @@
 
                 </div>
                 
+                <!-- ⭐⭐ **بخش مرور** ⭐⭐ -->
+                <div id="review-section" class="review-section" style="display: none;">
+                    <!-- محتوای ReviewManager.js اینجا تزریق می‌شود -->
+                </div>
+                
+                <!-- ⭐⭐ **بخش گفتار (Speaking)** ⭐⭐ -->
+                <div id="speaking-section" class="speaking-section" style="display: none;">
+                    <!-- محتوای Speaking.js اینجا تزریق می‌شود -->
+                </div>
+                
             </div>
         </div>
     </main>
@@ -289,15 +395,40 @@
         </div>
     </div>
 
-    <!-- ماژول‌های جاوااسکریپت -->
-    <script type="module" src="js/modules/LessonManager.js"></script>
-    <script type="module" src="js/modules/Vocabulary.js"></script>
-    <!-- بقیه ماژول‌ها... -->
-    <script type="module" src="js/modules/Games.js"></script>
-    <script type="module" src="js/modules/Speaking.js"></script>  <!-- <-- این خط اضافه شده -->
+    <!-- ✅ ماژول‌های جاوااسکریپت - ترتیب بهینه شده -->
     
-    <!-- فایل اصلی برنامه -->
+    <!-- 1️⃣ ماژول‌های پایه (بدون وابستگی) -->
+    <script type="module" src="js/utils/UI.js"></script>
+    <script type="module" src="js/modules/AudioManager.js"></script>
+    
+    <!-- 2️⃣ ماژول مدیریت درس (وابسته به UI) -->
+    <script type="module" src="js/modules/LessonManager.js"></script>
+    
+    <!-- 3️⃣ ماژول پیشرفت (وابسته به LessonManager) -->
+    <script type="module" src="js/modules/ProgressManager.js"></script>
+    
+    <!-- 4️⃣ ماژول رندر بخش‌ها -->
+    <script type="module" src="js/modules/SectionRenderer.js"></script>
+    
+    <!-- 5️⃣ ماژول‌های آموزشی (بدون وابستگی متقابل) -->
+    <script type="module" src="js/modules/Vocabulary.js"></script>
+    <script type="module" src="js/modules/Grammar.js"></script>
+    <script type="module" src="js/modules/Conversation.js"></script>
+    <script type="module" src="js/modules/Listening.js"></script>
+    <script type="module" src="js/modules/Speaking.js"></script>
+    <script type="module" src="js/modules/Flashcards.js"></script>
+    
+    <!-- 6️⃣ ماژول‌های مرور -->
+    <script type="module" src="js/modules/review/LeitnerEngine.js"></script>
+    <script type="module" src="js/modules/review/ReviewManager.js"></script>
+    
+    <!-- 7️⃣ ماژول‌های تکمیلی -->
+    <script type="module" src="js/modules/Quiz.js"></script>
+    <script type="module" src="js/modules/Games.js"></script>
+    
+    <!-- 8️⃣ فایل اصلی برنامه (آخرین اسکریپت) -->
     <script type="module" src="js/app.js"></script>
+
     
     <!-- اسکریپت‌های کمکی UI -->
     <script>
@@ -347,9 +478,9 @@
                             <i class="fas fa-book-reader fa-3x" style="color: var(--primary-color);"></i>
                         </div>
                         <h4>English 7 App</h4>
-                        <p class="text-muted">نسخه: 3.2.0 (همراه با آزمون آنلاین)</p>
+                        <p class="text-muted">نسخه: 3.3.0 (Speaking Lab Edition)</p>
                         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
-                        <p>شامل ماژول‌های مکالمه، شنیدار، گرامر، مرور و آزمون</p>
+                        <p>شامل ماژول‌های مکالمه، شنیدار، گرامر، مرور، آزمون و آزمایشگاه تلفظ حرفه‌ای</p>
                     </div>
                 </div>
             `;
@@ -358,13 +489,6 @@
             const close = () => aboutModal.remove();
             aboutModal.querySelector('.close-modal-btn').onclick = close;
             aboutModal.onclick = (e) => { if(e.target === aboutModal) close(); };
-        }
-        
-        function resetProgress() {
-            if (confirm('⚠️ هشدار: تمام پیشرفت‌های ذخیره شده شما حذف خواهد شد.\nآیا ادامه می‌دهید؟')) {
-                localStorage.clear();
-                location.reload();
-            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -397,12 +521,33 @@
                 .notification.success { border-left: 4px solid #00b894; color: #2d3436; }
                 .notification.info { border-left: 4px solid #0984e3; color: #2d3436; }
                 
-                .modal-overlay { 
-                    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-                    background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); z-index: 9999; 
-                    display: flex; justify-content: center; align-items: center; 
+                body.dark-mode .notification {
+                    background: #2d3436;
+                    color: #dfe6e9;
                 }
-                @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translat(0); opacity: 1; } }
+                
+                .notification-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                
+                .notification i {
+                    font-size: 18px;
+                }
+                
+                .notification.success i {
+                    color: #00b894;
+                }
+                
+                .notification.info i {
+                    color: #0984e3;
+                }
+                
+                .fade-out {
+                    opacity: 0 !important;
+                    transform: translateX(-50%) translateY(-20px) !important;
+                }
             `;
             document.head.appendChild(style); 
         });
